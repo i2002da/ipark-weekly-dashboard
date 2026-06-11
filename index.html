@@ -282,9 +282,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
     <div class="pat-logo">HDC현대산업개발</div>
     <div class="pat-title">천안IPC 주간업무현황</div>
     <div class="pat-desc">GitHub Personal Access Token으로 접속합니다.<br>토큰은 이 기기에만 저장되며 외부로 전송되지 않습니다.</div>
-    <input class="pat-input" id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-    <div class="pat-help">gist, gists 권한이 있는 Fine-grained 또는 Classic PAT를 입력하세요.<br>
-      <a href="https://github.com/settings/tokens" target="_blank">GitHub 토큰 발급 →</a></div>
+    <input class="pat-input" id="pat-input" type="password" placeholder="ghp_ 로 시작하는 토큰 입력">
+    <div class="pat-help"><b>gist</b> 권한이 포함된 GitHub Classic PAT를 입력하세요.<br>
+      팀 담당자에게 공용 토큰을 문의하거나<br>
+      <a href="https://github.com/settings/tokens" target="_blank">새 토큰 직접 발급 →</a></div>
     <button class="pat-btn" onclick="doPATLogin()"><i class="ti ti-login" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>접속하기</button>
     <div class="pat-demo" onclick="demoMode()">데모 모드로 보기 (저장 안 됨)</div>
   </div>
@@ -436,11 +437,17 @@ function siteKey(site) { return site.replace(/\s/g,'_'); }
 function doPATLogin() {
   const val = document.getElementById('pat-input').value.trim();
   if (!val) { toast('토큰을 입력하세요'); return; }
+  const btn = document.querySelector('.pat-btn');
+  btn.textContent = '연결 중...'; btn.disabled = true;
   PAT = val;
   localStorage.setItem('ipark_pat', PAT);
   loadGistIds().then(ok => {
+    btn.textContent = '접속하기'; btn.disabled = false;
     if (ok) startApp();
-    else { toast('토큰 확인 실패. 권한을 확인하세요.'); PAT = ''; }
+    else { toast('토큰 확인 실패. gist 권한이 있는지 확인하세요.'); PAT = ''; }
+  }).catch(e => {
+    btn.textContent = '접속하기'; btn.disabled = false;
+    toast('오류: ' + e.message); PAT = '';
   });
 }
 
@@ -482,18 +489,19 @@ async function loadGistIds() {
     const u = await r.json();
     localStorage.setItem('ipark_username', u.login);
     document.getElementById('user-name').textContent = u.login;
-    // Gist ID가 없는 현장은 새로 생성
-    for (const site of SITES) {
-      if (!GIST_IDS[site]) {
-        const gistId = await createGist(site);
-        if (gistId) {
-          GIST_IDS[site] = gistId;
+    // 이미 GIST_IDS가 모두 있으면 createGist 건너뜀
+    const allPresent = SITES.every(s => GIST_IDS[s]);
+    if (!allPresent) {
+      for (const site of SITES) {
+        if (!GIST_IDS[site]) {
+          const gistId = await createGist(site);
+          if (gistId) GIST_IDS[site] = gistId;
         }
       }
     }
     localStorage.setItem('ipark_gist_ids', JSON.stringify(GIST_IDS));
     return true;
-  } catch(e) { return false; }
+  } catch(e) { console.error('loadGistIds error:', e); return false; }
 }
 
 async function createGist(site) {
@@ -553,7 +561,8 @@ async function fetchSiteData(site) {
     etagCache[site] = r.headers.get('ETag') || '';
     const g = await r.json();
     const year = WEEK.year;
-    const fileContent = g.files[`${year}.json`]?.content;
+    const safesite = site.replace(/ /g,'_').replace(/·/g,'_');
+    const fileContent = (g.files[`ipark_${safesite}_${year}.json`] || g.files[`${year}.json`])?.content;
     if (!fileContent) return buildInitData(site);
     const yearData = JSON.parse(fileContent);
     return yearData[wk] || buildInitData(site);
@@ -585,9 +594,10 @@ async function saveSiteData(site, patchData) {
     const g0 = await r0.json();
     const year = WEEK.year;
     const wk = weekKey();
-    const fileKey = `${year}.json`;
+    const safesite = site.replace(/ /g,'_').replace(/·/g,'_');
+    const fileKey = `ipark_${safesite}_${year}.json`;
     let yearData = {};
-    try { yearData = JSON.parse(g0.files[fileKey]?.content || '{}'); } catch(e) {}
+    try { yearData = JSON.parse((g0.files[fileKey] || g0.files[`${year}.json`])?.content || '{}'); } catch(e) {}
     yearData[wk] = { ...(yearData[wk] || buildInitData(site)), ...patchData, updated_at: new Date().toISOString() };
     const files = { [fileKey]: { content: JSON.stringify(yearData, null, 2) } };
     const saveHeaders = { Authorization: `token ${PAT}`, 'Content-Type': 'application/json' };
