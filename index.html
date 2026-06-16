@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v2.4</title>
+<title>천안IPC 주간업무현황 v2.5</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -115,11 +115,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .open-btn:hover{background:var(--blue-bg);color:var(--blue-tx);border-color:transparent}
 .open-btn i{font-size:12px}
 .inline-body{display:none;border-top:1px solid var(--bd)}
-.inline-body.open{display:grid;grid-template-columns:1fr 1fr}
-.icol{padding:10px 14px;border-right:1px solid var(--bd)}
-.icol:last-child{border-right:none}
-.icol-hd{font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px}
-.icol-hd i{font-size:12px}
+.inline-body.open{display:block}
+.rollup-all-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0}
+.rollup-gj-block{padding:10px 16px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.rollup-gj-hd{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rollup-gj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.rollup-gj-name{font-size:11px;font-weight:700;color:var(--tx2);letter-spacing:.02em}
+.rollup-gj-cnt{font-size:10px;margin-left:auto;font-weight:600}
+.rollup-gj-body{font-size:11px;color:var(--tx2);line-height:1.6}
+.rollup-gj-body h1{font-size:14px;font-weight:700;color:var(--tx);margin:6px 0 3px}
+.rollup-gj-body h1:first-child{margin-top:0}
+.rollup-gj-body h2{font-size:13px;font-weight:700;color:var(--tx);margin:5px 0 3px}
+.rollup-gj-body h2:first-child{margin-top:0}
+.rollup-gj-body h3{font-size:12px;font-weight:600;color:var(--tx);margin:5px 0 2px}
+.rollup-gj-body h3:first-child{margin-top:0}
+.rollup-gj-body h4{font-size:11px;font-weight:600;color:var(--tx);margin:4px 0 2px}
+.rollup-gj-body ul{margin:2px 0 2px 14px}
+.rollup-gj-body li{margin-bottom:2px;line-height:1.5}
+.rollup-gj-body li input[type=checkbox]{margin-right:4px;accent-color:var(--blue);pointer-events:none}
+.rollup-gj-body strong{font-weight:600;color:var(--tx)}
+.rollup-gj-body code{font-family:'SF Mono','Fira Code',monospace;font-size:10px;background:var(--bg3);padding:1px 4px;border-radius:3px;border:0.5px solid var(--bd)}
+.rollup-gj-body blockquote{border-left:2px solid var(--bd2);padding:2px 8px;color:var(--tx3);margin:3px 0;background:var(--bg3);border-radius:0 3px 3px 0;font-size:10px}
+.rollup-gj-body p{margin-bottom:2px}
+.rollup-gj-body .bd{background:var(--green-bg);color:var(--green-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.rollup-gj-body .bp{background:var(--blue-bg);color:var(--blue-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.rollup-gj-body .by{background:var(--amber-bg);color:var(--amber-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.rollup-gj-body .bw{background:var(--red-bg);color:var(--red-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.rollup-empty{font-size:11px;color:var(--tx3);font-style:italic;padding:2px 0}
 .tl{display:flex;align-items:flex-start;gap:5px;margin-bottom:4px}
 .tld{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
 .d-done{background:#3A6E12}.d-prog{background:#1A5FA8}
@@ -172,6 +194,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 /* contenteditable 영역 */
 .wy-ce{flex:1;outline:none;padding:14px 16px;overflow-y:auto;font-size:13px;line-height:1.75;color:var(--tx);caret-color:var(--blue)}
 .wy-ce:empty::before{content:attr(data-ph);color:var(--tx3);font-size:12px;pointer-events:none}
+.wy-ce h1{font-size:19px;font-weight:700;color:var(--tx);margin:14px 0 6px;letter-spacing:-.01em}
+.wy-ce h1:first-child{margin-top:0}
+.wy-ce h2{font-size:16px;font-weight:700;color:var(--tx);margin:13px 0 5px;padding-bottom:3px;border-bottom:1px solid var(--bd2)}
+.wy-ce h2:first-child{margin-top:0}
 .wy-ce h3{font-size:14px;font-weight:600;color:var(--tx);margin:12px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--bd)}
 .wy-ce h3:first-child{margin-top:0}
 .wy-ce h4{font-size:13px;font-weight:600;color:var(--tx);margin:8px 0 3px}
@@ -491,7 +517,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v2.4  2025-06-11 23:55  (Firebase 실시간 동기화)';
+const VER = 'v2.5  2025-06-12 09:20';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -974,28 +1000,29 @@ function renderRollup(rows){
     const col=PROG_COL[t]||'#1A5FA8';
     const sc=data.status==='정상'?'st-ok':data.status==='지연'?'st-red':'st-warn';
     const cats=getCats(site);
-    const prev=cats.slice(0,3).map(c=>{
-      const md=data.gongjong?.[c]?.current_md||'';
-      const ln=md.split('\n').find(l=>l.trim().startsWith('- '));
-      if(!ln)return null;
-      const txt=ln.replace(/^-\s*\[.\]\s*/,'').replace(/`[^`]+`\s*/g,'').trim();
-      const done=ln.includes('[x]');
-      const warn=ln.includes('`지적`')||ln.includes('`대기`');
-      const st=done?'done':warn?'warn':ln.includes('`진행`')?'prog':'plan';
-      return{c,txt,st};
-    }).filter(Boolean);
-    const prevH=prev.length
-      ?prev.map(p=>`<div class="tl"><span class="tld d-${p.st}"></span><span class="tlt ${p.st==='done'?'done':''}">${p.c}: ${p.txt.slice(0,28)}${p.txt.length>28?'…':''}</span></div>`).join('')
-      :'<div style="font-size:11px;color:var(--tx3)">항목 없음</div>';
-    const gjH=cats.slice(0,5).map(c=>{
-      const md=data.gongjong?.[c]?.current_md||'';
+    const sk=site.replace(/\s/g,'_');
+
+    // 모든 공종의 전체 작성 내용 취합 — 금주 진행사항만 (간결한 전체현황 취지)
+    const allCatsH = cats.map(c=>{
+      const md=(data.gongjong?.[c]?.current_md||'').trim();
       const items=md.split('\n').filter(l=>l.trim().startsWith('- '));
       const done=items.filter(l=>l.includes('[x]')).length;
-      return`<div class="tl"><span class="tld d-${done>0&&done===items.length?'done':'prog'}"></span><span class="tlt">${c} (${done}/${items.length})</span></div>`;
+      const hasW=md.includes('\`지적\`')||md.includes('\`대기\`');
+      const bodyHtml = md
+        ? stripFirstHeading(marked.parse(md))
+        : '<div class="rollup-empty">작성된 내용 없음</div>';
+      return`<div class="rollup-gj-block">
+        <div class="rollup-gj-hd">
+          <span class="rollup-gj-dot" style="background:${GJ_COL[c]||'var(--blue)'}"></span>
+          <span class="rollup-gj-name">${c}</span>
+          ${items.length?`<span class="rollup-gj-cnt" style="color:${hasW?'var(--red)':'var(--tx3)'}">${done}/${items.length}</span>`:''}
+        </div>
+        <div class="rollup-gj-body">${bodyHtml}</div>
+      </div>`;
     }).join('');
-    const sk=site.replace(/\s/g,'_');
+
     return`<div class="site-card" data-site="${site}" id="sc-${sk}">
-      <div class="site-head" onclick="toggleInline('${sk}')">
+      <div class="site-head exp" onclick="toggleInline('${sk}')">
         <span class="s-tag ${STAGS[t]||'t-blue'}">${t}</span>
         <span class="s-name">${site}</span>
         <span class="s-type">${t!=='DX TFT'&&t!=='기반시설'?'아이파크시티':''}</span>
@@ -1003,22 +1030,19 @@ function renderRollup(rows){
           <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
           <span class="prog-pct">${t==='착공예정'?'인허가':pct+'%'}</span>
           <span class="s-status ${sc}">${data.status||'정상'}</span>
-          <div class="open-btn" onclick="event.stopPropagation();openDetail('${site}')" title="상세">
+          <div class="open-btn" onclick="event.stopPropagation();openDetail('${site}')" title="상세 편집">
             <i class="ti ti-layout-sidebar-right-expand"></i></div>
         </div>
       </div>
-      <div class="inline-body" id="ib-${sk}">
-        <div class="icol">
-          <div class="icol-hd"><i class="ti ti-hammer"></i>금주 요약</div>
-          ${prevH}
-          <div class="more-link" onclick="openDetail('${site}')"><i class="ti ti-arrow-right"></i>상세 편집</div>
-        </div>
-        <div class="icol">
-          <div class="icol-hd"><i class="ti ti-checklist"></i>공종 현황</div>${gjH}
-        </div>
+      <div class="inline-body open" id="ib-${sk}">
+        <div class="rollup-all-cats">${allCatsH}</div>
       </div>
     </div>`;
   }).join('');
+}
+
+function stripFirstHeading(html){
+  return html.replace(/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/,'');
 }
 function toggleInline(sk){
   const ib=document.getElementById('ib-'+sk);
@@ -1137,7 +1161,9 @@ function switchGJ(c){
 // ════════════════════════════════════════════════════════════
 const SLASH_CMDS = [
   {cat:'제목', cmds:[
-    {icon:'ti-heading',label:'제목 H3',    fn:w=>ceExec(w,'formatBlock','h3')},
+    {icon:'ti-h-1',label:'대제목 H1',     fn:w=>ceExec(w,'formatBlock','h1')},
+    {icon:'ti-h-2',label:'제목 H2',       fn:w=>ceExec(w,'formatBlock','h2')},
+    {icon:'ti-heading',label:'중제목 H3',  fn:w=>ceExec(w,'formatBlock','h3')},
     {icon:'ti-heading',label:'소제목 H4',  fn:w=>ceExec(w,'formatBlock','h4')},
   ]},
   {cat:'목록', cmds:[
@@ -1203,10 +1229,16 @@ function renderWYEditor(site,cat,data){
 
   // 마크다운 → HTML 로드
   ['cur','nxt'].forEach(w=>{
-    const md=w==='cur'?gjD.current_md:gjD.next_md;
+    let md=w==='cur'?gjD.current_md:gjD.next_md;
     const ce=document.getElementById('ce-'+w);
     if(md&&md.trim()){
-      ce.innerHTML=marked.parse(md);
+      // 금주 진행사항(cur)은 첫 줄의 "### 공종명" 제목을 제거하고 빈 셀로 시작
+      if(w==='cur') md=stripFirstHeading2(md);
+      if(md.trim()){
+        ce.innerHTML=marked.parse(md);
+      } else {
+        ce.innerHTML='';
+      }
       // 체크박스 인터랙티브 처리
       ce.querySelectorAll('input[type=checkbox]').forEach(cb=>{
         if(edit){
@@ -1221,6 +1253,16 @@ function renderWYEditor(site,cat,data){
   });
 }
 
+function stripFirstHeading2(md){
+  // 마크다운 원문에서 첫 줄이 ### 또는 #### 제목이면 그 줄만 제거 (내용은 보존)
+  const lines=md.split('\n');
+  if(lines.length && /^#{1,4}\s/.test(lines[0].trim())){
+    lines.shift();
+    while(lines.length && lines[0].trim()==='') lines.shift();
+  }
+  return lines.join('\n');
+}
+
 function tbHTML(w){
   return`<span class="wtlbl">서식</span>
     <div class="wt" onmousedown="e=>{e.preventDefault()}" onclick="ceExec('${w}','bold')" title="굵게"><b>B</b></div>
@@ -1228,6 +1270,8 @@ function tbHTML(w){
     <div class="wt" onmousedown="e=>{e.preventDefault()}" onclick="ceExec('${w}','strikeThrough')" title="취소선"><s>S</s></div>
     <div class="wtsep"></div>
     <span class="wtlbl">제목</span>
+    <div class="wt" onclick="ceExec('${w}','formatBlock','h1')" style="font-size:10px">H1</div>
+    <div class="wt" onclick="ceExec('${w}','formatBlock','h2')" style="font-size:10px">H2</div>
     <div class="wt" onclick="ceExec('${w}','formatBlock','h3')" style="font-size:10px">H3</div>
     <div class="wt" onclick="ceExec('${w}','formatBlock','h4')" style="font-size:10px">H4</div>
     <div class="wtsep"></div>
