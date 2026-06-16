@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v2.3</title>
+<title>천안IPC 주간업무현황 v2.4</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1/dist/turndown-plugin-gfm.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{
   --bg:#F5F4F0;--bg2:#fff;--bg3:#EEECEA;
@@ -489,14 +491,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v2.3  2025-06-11 23:40';
+const VER = 'v2.4  2025-06-11 23:55  (Firebase 실시간 동기화)';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
 // 토큰 (내장 — 코드에 직접 포함)
 // ════════════════════════════════════════════════════════════
-const _T = ['ghp_WYtpQ', 'hjT1mi3OZjeJJCWQA1VNCiaZZ3pRtj3'].join('');
-const GIST_TOKEN = _T;
+// ════════════════════════════════════════════════════════════
+// Firebase 초기화 (실시간 DB — 데이터·토큰 모두 여기 저장)
+// ════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBycY7e2rCAGNbhNBPEZztsTavN18yqts0",
+  authDomain: "ipc-dashboard-61be5.firebaseapp.com",
+  databaseURL: "https://ipc-dashboard-61be5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ipc-dashboard-61be5",
+  storageBucket: "ipc-dashboard-61be5.firebasestorage.app",
+  messagingSenderId: "761608237774",
+  appId: "1:761608237774:web:769a3938a7ae90e80cd69f",
+  measurementId: "G-QD8017ERGY"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDB = firebase.database();
+const FB_ROOT = 'ipark_weekly_v1';
 
 // ════════════════════════════════════════════════════════════
 // 상수
@@ -517,14 +533,6 @@ const GJ_COL = {
   '현장 DX 적용':'#1A5FA8','본사 유관팀 협의':'#4E45B0','DX 교육·과제':'#3A6E12'
 };
 const PROG_COL = {'착공':'#1A5FA8','착공예정':'#8A5009','기반시설':'#0C6B52','DX TFT':'#4E45B0'};
-const GIST_IDS = {
-  '3단지':'1d873b30d956aff42560010401348a8a',
-  '4단지':'d123cf6feb701976c1906686a4a111f3',
-  '5단지':'f9735f876219765ded71310c4bc8d852',
-  '6단지':'8cbe6dc83d2485d9a7d5ce623d11188f',
-  '기반시설':'98cf3995d7fd2394eaad920502f04ec3',
-  'DX TFT':'85a2181b2f1a01cce5624a18d641fb2f'
-};
 
 // ════════════════════════════════════════════════════════════
 // 상태
@@ -601,85 +609,146 @@ function updateWeekLabel(){
 function wkKey(){return `${WEEK.year}-W${String(WEEK.week).padStart(2,'0')}`;}
 function sf(s){return s.replace(/ /g,'_').replace(/·/g,'_');}
 function gf(site,yr){return `ipark_${sf(site)}_${yr}.json`;}
-function getCustomCatsDB(){
-  try{const r=localStorage.getItem('ipark_cats');if(r)return JSON.parse(r);}catch(e){}
+// 카테고리(공종 항목) — Firebase 동기화 + 메모리 캐시
+let CATS_CACHE = null;
+
+function defaultCatsDB(){
   const def={};
   SITES.forEach(s=>{ def[s]=[...(CATS[SITE_TYPE[s]]||CATS['착공'])]; });
-  localStorage.setItem('ipark_cats',JSON.stringify(def));
   return def;
 }
-function saveCustomCatsDB(db){ localStorage.setItem('ipark_cats',JSON.stringify(db)); }
+
+async function loadCatsFromFirebase(){
+  if(IS_DEMO){
+    CATS_CACHE = defaultCatsDB();
+    return;
+  }
+  try{
+    const snap = await fbCatsRef().once('value');
+    const val = snap.val();
+    if(val){
+      CATS_CACHE = val;
+    } else {
+      CATS_CACHE = defaultCatsDB();
+      await fbCatsRef().set(CATS_CACHE);
+    }
+  }catch(e){
+    console.warn('카테고리 로드 실패, 기본값 사용', e);
+    CATS_CACHE = defaultCatsDB();
+  }
+  // 실시간 리스너 — 다른 사용자가 항목을 추가/삭제하면 즉시 반영
+  if(!IS_DEMO){
+    fbCatsRef().on('value', snap=>{
+      const val=snap.val();
+      if(val) CATS_CACHE = val;
+    });
+  }
+}
+
 function getCats(site){
-  const db=getCustomCatsDB();
-  if(db[site]&&db[site].length) return db[site];
+  if(!CATS_CACHE) CATS_CACHE = defaultCatsDB();
+  if(CATS_CACHE[site] && CATS_CACHE[site].length) return CATS_CACHE[site];
   const t=SITE_TYPE[site]; return CATS[t]||CATS['착공'];
 }
-function addCat(site,name){
-  const db=getCustomCatsDB();
-  if(!db[site]) db[site]=getCats(site);
-  if(db[site].includes(name)){ toast('이미 존재하는 항목입니다'); return false; }
-  db[site].push(name);
-  saveCustomCatsDB(db);
+
+async function persistCats(){
+  if(IS_DEMO) return;
+  try{ await fbCatsRef().set(CATS_CACHE); }
+  catch(e){ toast('항목 저장 실패: '+e.message); }
+}
+
+async function addCat(site,name){
+  if(!CATS_CACHE) CATS_CACHE = defaultCatsDB();
+  if(!CATS_CACHE[site]) CATS_CACHE[site]=getCats(site);
+  if(CATS_CACHE[site].includes(name)){ toast('이미 존재하는 항목입니다'); return false; }
+  CATS_CACHE[site].push(name);
+  await persistCats();
   return true;
 }
-function renameCat(site,oldName,newName){
-  const db=getCustomCatsDB();
-  if(!db[site]) db[site]=getCats(site);
-  const idx=db[site].indexOf(oldName);
+async function renameCat(site,oldName,newName){
+  if(!CATS_CACHE) CATS_CACHE = defaultCatsDB();
+  if(!CATS_CACHE[site]) CATS_CACHE[site]=getCats(site);
+  const idx=CATS_CACHE[site].indexOf(oldName);
   if(idx<0) return false;
-  if(db[site].includes(newName)&&newName!==oldName){ toast('이미 존재하는 이름입니다'); return false; }
-  db[site][idx]=newName;
-  saveCustomCatsDB(db);
+  if(CATS_CACHE[site].includes(newName)&&newName!==oldName){ toast('이미 존재하는 이름입니다'); return false; }
+  CATS_CACHE[site][idx]=newName;
+  await persistCats();
   return true;
 }
-function deleteCat(site,name){
-  const db=getCustomCatsDB();
-  if(!db[site]) db[site]=getCats(site);
-  if(db[site].length<=1){ toast('최소 1개 항목은 있어야 합니다'); return false; }
-  db[site]=db[site].filter(c=>c!==name);
-  saveCustomCatsDB(db);
+async function deleteCat(site,name){
+  if(!CATS_CACHE) CATS_CACHE = defaultCatsDB();
+  if(!CATS_CACHE[site]) CATS_CACHE[site]=getCats(site);
+  if(CATS_CACHE[site].length<=1){ toast('최소 1개 항목은 있어야 합니다'); return false; }
+  CATS_CACHE[site]=CATS_CACHE[site].filter(c=>c!==name);
+  await persistCats();
   return true;
-}
-function reorderCat(site,fromIdx,toIdx){
-  const db=getCustomCatsDB();
-  if(!db[site]) db[site]=getCats(site);
-  const arr=db[site];
-  const [item]=arr.splice(fromIdx,1);
-  arr.splice(toIdx,0,item);
-  saveCustomCatsDB(db);
 }
 
 // ════════════════════════════════════════════════════════════
 // 사용자 DB
 // ════════════════════════════════════════════════════════════
-function getUserDB(){
-  try{const r=localStorage.getItem('ipark_users');if(r)return JSON.parse(r);}catch(e){}
-  const def=[
+// 사용자 DB — Firebase 동기화 + 메모리 캐시 (전 직원 동일 계정 공유)
+let USERS_CACHE = null;
+
+function defaultUsersDB(){
+  return [
     {id:'admin',   pw:btoa('admin1234'), name:'관리자',  role:'admin',   site:''},
     {id:'manager1',pw:btoa('pass1234'),  name:'현장관리', role:'manager', site:''},
     {id:'viewer1', pw:btoa('view1234'),  name:'조회자',  role:'viewer',  site:''}
   ];
-  localStorage.setItem('ipark_users',JSON.stringify(def));
-  return def;
 }
-function saveUserDB(u){localStorage.setItem('ipark_users',JSON.stringify(u));}
+
+async function loadUsersFromFirebase(){
+  try{
+    const snap = await fbDB.ref(`${FB_ROOT}/users`).once('value');
+    const val = snap.val();
+    if(val && Array.isArray(val) && val.length){
+      USERS_CACHE = val;
+    } else {
+      USERS_CACHE = defaultUsersDB();
+      await fbDB.ref(`${FB_ROOT}/users`).set(USERS_CACHE);
+    }
+  }catch(e){
+    console.warn('사용자 DB 로드 실패, 기본값 사용', e);
+    USERS_CACHE = defaultUsersDB();
+  }
+}
+
+function getUserDB(){
+  if(!USERS_CACHE) USERS_CACHE = defaultUsersDB();
+  return USERS_CACHE;
+}
+
+async function saveUserDB(u){
+  USERS_CACHE = u;
+  try{ await fbDB.ref(`${FB_ROOT}/users`).set(u); }
+  catch(e){ toast('사용자 정보 저장 실패: '+e.message); }
+}
 
 // ════════════════════════════════════════════════════════════
 // 로그인
 // ════════════════════════════════════════════════════════════
-function doLogin(){
+async function doLogin(){
   const id=document.getElementById('li-id').value.trim();
   const pw=document.getElementById('li-pw').value;
   const err=document.getElementById('li-err');
+  const btn=document.getElementById('li-btn');
   if(!id||!pw){err.textContent='아이디와 비밀번호를 입력하세요.';return;}
+  if(!USERS_CACHE){
+    btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> 연결 중...';
+    await loadUsersFromFirebase();
+    btn.disabled=false; btn.innerHTML='<i class="ti ti-login"></i>로그인';
+  }
   const u=getUserDB().find(x=>x.id===id&&x.pw===btoa(pw));
   if(!u){err.textContent='아이디 또는 비밀번호가 틀렸습니다.';return;}
   curUser=u; IS_DEMO=false;
   localStorage.setItem('ipark_session',JSON.stringify({id:u.id,ts:Date.now()}));
+  if(!CATS_CACHE) await loadCatsFromFirebase();
   startApp();
 }
-function demoMode(){
+async function demoMode(){
   IS_DEMO=true; curUser={id:'demo',name:'데모',role:'viewer',site:''};
+  await loadCatsFromFirebase();
   initDemoData(); startApp();
 }
 function doLogout(){
@@ -700,10 +769,14 @@ function startApp(){
   updateWeekLabel();
   loadRollup();
 }
-// 세션 자동 복원
-(function(){
+// 앱 초기화 — Firebase에서 사용자/카테고리 선로드 후 세션 복원
+async function initApp(){
+  await Promise.all([
+    loadUsersFromFirebase(),
+    loadCatsFromFirebase()
+  ]);
   const s=localStorage.getItem('ipark_session');
-  if(!s)return;
+  if(!s) return;
   try{
     const{id,ts}=JSON.parse(s);
     if(Date.now()-ts>8*3600*1000){localStorage.removeItem('ipark_session');return;}
@@ -711,25 +784,34 @@ function startApp(){
     if(!u)return;
     curUser=u; IS_DEMO=false; startApp();
   }catch(e){}
-})();
+}
+initApp();
 
 // ════════════════════════════════════════════════════════════
-// Gist API
 // ════════════════════════════════════════════════════════════
-async function gGet(gid){
-  const r=await fetch(`https://api.github.com/gists/${gid}`,{
-    headers:{Authorization:'token '+GIST_TOKEN,Accept:'application/vnd.github+json'}
-  });
-  if(!r.ok)throw new Error('GET '+r.status);
-  return{data:await r.json(),etag:r.headers.get('ETag')||''};
+// Firebase 경로 헬퍼
+// ════════════════════════════════════════════════════════════
+function fbSiteRef(site,year){
+  return fbDB.ref(`${FB_ROOT}/sites/${sf(site)}/${year}`);
 }
-async function gPatch(gid,files,etag){
-  const h={Authorization:'token '+GIST_TOKEN,Accept:'application/vnd.github+json','Content-Type':'application/json'};
-  if(etag)h['If-Match']=etag;
-  const r=await fetch(`https://api.github.com/gists/${gid}`,{method:'PATCH',headers:h,body:JSON.stringify({files})});
-  if(r.status===412)throw new Error('CONFLICT');
-  if(!r.ok)throw new Error('PATCH '+r.status);
-  return r.headers.get('ETag')||'';
+function fbCalRef(){
+  return fbDB.ref(`${FB_ROOT}/calendar`);
+}
+function fbCatsRef(){
+  return fbDB.ref(`${FB_ROOT}/categories`);
+}
+
+// 현장별 실시간 리스너 등록 (다른 사용자의 저장이 즉시 반영됨)
+const fbListeners = {};
+function attachRealtimeListener(site,year,onChange){
+  const key=site+'__'+year;
+  if(fbListeners[key])return;
+  const ref=fbSiteRef(site,year);
+  ref.on('value', snap=>{
+    const val=snap.val();
+    if(val) onChange(val);
+  });
+  fbListeners[key]=ref;
 }
 
 async function fetchSiteData(site){
@@ -741,37 +823,33 @@ async function fetchSiteData(site){
   const ck=site+'__'+wk;
   if(dataCache[ck])return dataCache[ck];
   try{
-    const{data,etag}=await gGet(GIST_IDS[site]);
-    etagCache[site]=etag;
-    const fname=gf(site,WEEK.year);
-    const content=data.files[fname]?.content;
-    if(!content)return buildInitData(site);
-    const yd=JSON.parse(content);
-    const wd=yd[wk]||buildInitData(site);
-    dataCache[ck]=wd; return wd;
+    const snap=await fbSiteRef(site,WEEK.year).child(wk).once('value');
+    const val=snap.val();
+    const wd=val||buildInitData(site);
+    dataCache[ck]=wd;
+    return wd;
   }catch(e){console.warn(site,e);return buildInitData(site);}
 }
 
 async function saveSiteData(site,patch){
+  const wk=wkKey();
+  const ck=site+'__'+wk;
   if(IS_DEMO){
-    const ck=site+'__'+wkKey();
     dataCache[ck]={...(dataCache[ck]||buildInitData(site)),...patch,updated_at:new Date().toISOString()};
     return true;
   }
   try{
-    const{data,etag}=await gGet(GIST_IDS[site]);
-    const fname=gf(site,WEEK.year);
-    let yd={};
-    try{yd=JSON.parse(data.files[fname]?.content||'{}');}catch(e){}
-    const wk=wkKey();
-    yd[wk]={...(yd[wk]||buildInitData(site)),...patch,
-            updated_by:curUser?.name||'',updated_at:new Date().toISOString()};
-    await gPatch(GIST_IDS[site],{[fname]:{content:JSON.stringify(yd,null,2)}},etag);
-    dataCache[site+'__'+wk]=yd[wk];
+    const newData={
+      ...(dataCache[ck]||buildInitData(site)),
+      ...patch,
+      updated_by:curUser?.name||'',
+      updated_at:new Date().toISOString()
+    };
+    await fbSiteRef(site,WEEK.year).child(wk).set(newData);
+    dataCache[ck]=newData;
     return true;
   }catch(e){
-    if(e.message==='CONFLICT')toast('⚠️ 저장 충돌 — 새로고침 후 재시도하세요.');
-    else toast('저장 오류: '+e.message);
+    toast('저장 오류: '+e.message);
     return false;
   }
 }
@@ -995,16 +1073,16 @@ function renderGJSection(site,cats,data){
 function openCatAdd(site){
   showModal(`<h4><i class="ti ti-plus"></i>항목 추가</h4>
     <div class="fr"><label>새 항목 이름</label><input type="text" id="m-catname" placeholder="예: 안전관리"></div>`,
-    ()=>{
+    async()=>{
       const name=document.getElementById('m-catname').value.trim();
       if(!name){toast('이름을 입력하세요');return false;}
-      if(!addCat(site,name))return false;
+      const ok=await addCat(site,name);
+      if(!ok)return false;
       curGJ=name;
-      fetchSiteData(site).then(data=>{
-        if(!data.gongjong)data.gongjong={};
-        if(!data.gongjong[name])data.gongjong[name]={current_md:'',next_md:''};
-        renderGJSection(site,getCats(site),data);
-      });
+      const data=await fetchSiteData(site);
+      if(!data.gongjong)data.gongjong={};
+      if(!data.gongjong[name])data.gongjong[name]={current_md:'',next_md:''};
+      renderGJSection(site,getCats(site),data);
       toast(`'${name}' 항목이 추가되었습니다`);
     });
 }
@@ -1016,35 +1094,35 @@ function openCatEdit(site,catName){
       <button class="u-del" style="font-size:12px;padding:6px 12px" onclick="confirmDeleteCat('${site}','${catName}')">
         <i class="ti ti-trash" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>이 항목 삭제</button>
     </div>`,
-    ()=>{
+    async()=>{
       const newName=document.getElementById('m-catname2').value.trim();
       if(!newName){toast('이름을 입력하세요');return false;}
       if(newName===catName)return;
-      if(!renameCat(site,catName,newName))return false;
-      fetchSiteData(site).then(data=>{
-        if(data.gongjong&&data.gongjong[catName]){
-          data.gongjong[newName]=data.gongjong[catName];
-          delete data.gongjong[catName];
-        }
-        if(curGJ===catName)curGJ=newName;
-        renderGJSection(site,getCats(site),data);
-        saveSiteData(site,{gongjong:data.gongjong});
-      });
+      const ok=await renameCat(site,catName,newName);
+      if(!ok)return false;
+      const data=await fetchSiteData(site);
+      if(data.gongjong&&data.gongjong[catName]){
+        data.gongjong[newName]=data.gongjong[catName];
+        delete data.gongjong[catName];
+      }
+      if(curGJ===catName)curGJ=newName;
+      renderGJSection(site,getCats(site),data);
+      await saveSiteData(site,{gongjong:data.gongjong});
       toast('이름이 변경되었습니다');
     });
 }
 
-function confirmDeleteCat(site,catName){
+async function confirmDeleteCat(site,catName){
   if(!confirm(`'${catName}' 항목을 삭제하시겠습니까?\n작성된 내용도 함께 삭제됩니다.`))return;
-  if(!deleteCat(site,catName)){ return; }
+  const ok=await deleteCat(site,catName);
+  if(!ok){ return; }
   closeModal();
-  fetchSiteData(site).then(data=>{
-    if(data.gongjong)delete data.gongjong[catName];
-    const newCats=getCats(site);
-    if(curGJ===catName)curGJ=newCats[0];
-    renderGJSection(site,newCats,data);
-    saveSiteData(site,{gongjong:data.gongjong});
-  });
+  const data=await fetchSiteData(site);
+  if(data.gongjong)delete data.gongjong[catName];
+  const newCats=getCats(site);
+  if(curGJ===catName)curGJ=newCats[0];
+  renderGJSection(site,newCats,data);
+  await saveSiteData(site,{gongjong:data.gongjong});
   toast('삭제되었습니다');
 }
 
@@ -1466,7 +1544,7 @@ function renderUList(){
       ${u.id!=='admin'?`<div class="u-act"><div class="u-del" onclick="delUser('${u.id}')"><i class="ti ti-trash" style="font-size:11px"></i></div></div>`:''}
     </div>`).join('');
 }
-function addUser(){
+async function addUser(){
   const id=document.getElementById('nu-id').value.trim();
   const pw=document.getElementById('nu-pw').value;
   const name=document.getElementById('nu-name').value.trim();
@@ -1476,16 +1554,16 @@ function addUser(){
   const users=getUserDB();
   if(users.find(u=>u.id===id)){toast('이미 존재하는 아이디');return;}
   users.push({id,pw:btoa(pw),name,role,site});
-  saveUserDB(users); renderUList();
+  await saveUserDB(users); renderUList();
   ['nu-id','nu-pw','nu-name'].forEach(x=>document.getElementById(x).value='');
   toast(`'${name}' 추가 완료`);
 }
-function delUser(id){
+async function delUser(id){
   if(!confirm('사용자를 삭제할까요?'))return;
-  saveUserDB(getUserDB().filter(u=>u.id!==id));
+  await saveUserDB(getUserDB().filter(u=>u.id!==id));
   renderUList(); toast('삭제 완료');
 }
-function changePw(){
+async function changePw(){
   const cur=document.getElementById('pw-cur').value;
   const nw=document.getElementById('pw-new').value;
   const c2=document.getElementById('pw-c2').value;
@@ -1495,7 +1573,7 @@ function changePw(){
   const users=getUserDB();
   const u=users.find(x=>x.id===curUser.id);
   if(!u||u.pw!==btoa(cur)){toast('현재 비밀번호 오류');return;}
-  u.pw=btoa(nw); saveUserDB(users);
+  u.pw=btoa(nw); await saveUserDB(users);
   ['pw-cur','pw-new','pw-c2'].forEach(x=>document.getElementById(x).value='');
   toast('비밀번호 변경 완료');
 }
