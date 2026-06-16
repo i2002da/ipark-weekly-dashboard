@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v2.2</title>
+<title>천안IPC 주간업무현황 v2.3</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -66,7 +66,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .wn-btn{width:22px;height:22px;border:1px solid var(--bd);border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);background:var(--bg2)}
 .wn-btn:hover{background:var(--bg3)}
 .wn-btn i{font-size:11px}
-.wn-lbl{font-size:11px;font-weight:700;color:var(--tx);background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:2px 8px;min-width:62px;text-align:center;white-space:nowrap}
+.wn-lbl{font-size:11px;font-weight:700;color:var(--tx);background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:2px 10px;min-width:128px;text-align:center;white-space:nowrap;display:flex;align-items:center;gap:5px;justify-content:center;cursor:pointer;transition:background .15s}
+.wn-lbl:hover{background:var(--blue-bg);color:var(--blue-tx)}
+.wn-lbl .wn-date{font-size:10px;font-weight:500;color:var(--tx2)}
 .user-chip{font-size:11px;background:var(--blue-bg);color:var(--blue-tx);border-radius:99px;padding:3px 10px;display:flex;align-items:center;gap:3px;font-weight:700;white-space:nowrap}
 .user-chip i{font-size:12px}
 .icon-btn{width:26px;height:26px;border:1px solid var(--bd);border-radius:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);background:var(--bg2);flex-shrink:0}
@@ -133,16 +135,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .crumb{font-size:12px;color:var(--tx3)}
 .crumb strong{color:var(--tx);font-weight:700}
 .dv-bar-r{margin-left:auto;display:flex;gap:5px;align-items:center}
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg3);flex-shrink:0}
-.kpi-c{background:var(--bg2);border-radius:var(--r);padding:8px 10px;border:1px solid var(--bd)}
-.kpi-l{font-size:10px;color:var(--tx3);margin-bottom:2px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.kpi-v{font-size:19px;font-weight:700;color:var(--tx);letter-spacing:-.02em}
-.kpi-s{font-size:10px;color:var(--tx2);margin-top:1px}
 .gj-tabs{display:flex;border-bottom:1px solid var(--bd);background:var(--bg2);flex-shrink:0;overflow-x:auto;padding:0 16px}
 .gj-tab{font-size:12px;padding:8px 12px;cursor:pointer;color:var(--tx2);border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .15s;flex-shrink:0}
 .gj-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700}
 .gj-tab:hover:not(.active){background:var(--bg3)}
 .gj-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.gj-tab-edit{width:16px;height:16px;display:flex;align-items:center;justify-content:center;border-radius:4px;opacity:0;color:var(--tx3);margin-left:2px;flex-shrink:0}
+.gj-tab-edit i{font-size:10px}
+.gj-tab:hover .gj-tab-edit{opacity:.7}
+.gj-tab-edit:hover{opacity:1!important;background:var(--bg3);color:var(--tx)}
+.gj-tab-add{color:var(--blue)!important;border-bottom-color:transparent!important;gap:4px}
+.gj-tab-add:hover{background:var(--blue-bg)!important}
+.gj-tab-add i{font-size:13px}
 
 /* ── WYSIWYG 에디터 ── */
 .wy-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;border-top:1px solid var(--bd)}
@@ -299,6 +303,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .btn-c{font-size:12px;padding:5px 12px;border:0.5px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--tx2);cursor:pointer}
 .btn-s{font-size:12px;padding:5px 14px;border:none;border-radius:var(--r);background:var(--blue);color:#fff;cursor:pointer;font-weight:700}
 
+.app-footer{height:26px;background:var(--bg2);border-top:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.app-footer span{font-size:10px;color:var(--tx3);letter-spacing:.02em}
+
 /* ── 토스트·로딩 ── */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg2);font-size:12px;padding:8px 18px;border-radius:99px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;font-weight:600;white-space:nowrap}
 .toast.show{opacity:1}
@@ -351,10 +359,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
         <i class="ti ti-calendar-event" aria-hidden="true"></i>주요 일정</div>
     </div>
     <div class="tb-right">
-      <span class="ver-chip" id="top-ver"></span>
       <div class="week-nav">
         <div class="wn-btn" onclick="chgWeek(-1)"><i class="ti ti-chevron-left"></i></div>
-        <div class="wn-lbl" id="wn-lbl">25주차</div>
+        <div class="wn-lbl" id="wn-lbl" onclick="goToThisWeek()" title="클릭하면 이번 주로 이동">25주차</div>
         <div class="wn-btn" onclick="chgWeek(1)"><i class="ti ti-chevron-right"></i></div>
       </div>
       <div class="user-chip"><i class="ti ti-user"></i><span id="user-nm">-</span></div>
@@ -393,7 +400,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
             <i class="ti ti-calendar-plus"></i></div>
         </div>
       </div>
-      <div class="kpi-row" id="kpi-row"></div>
+      
       <div id="gj-section"></div>
     </div>
   </div>
@@ -422,6 +429,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
         <div class="add-ev-btn" onclick="openAddEvent()"><i class="ti ti-plus"></i>일정 추가</div></div>
       <div class="ev-list" id="ev-list"></div>
     </div>
+  </div>
+
+  <div class="app-footer">
+    <span id="footer-ver"></span>
   </div>
 </div>
 
@@ -478,9 +489,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v2.2  2025-06-11 23:00';
+const VER = 'v2.3  2025-06-11 23:40';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
-document.getElementById('top-ver').textContent = VER;
 
 // ════════════════════════════════════════════════════════════
 // 토큰 (내장 — 코드에 직접 포함)
@@ -525,7 +535,18 @@ let curSite = '', curGJ = '';
 let calYear = 2025, calMonth = 5;
 let calEvents = [];
 let dataCache = {}, etagCache = {};
-let WEEK = {year:2025,week:25,label:'25주차',from:'2025-06-16',to:'2025-06-20'};
+function calcWeek(baseDate){
+  const d=new Date(baseDate);
+  const yr=d.getFullYear();
+  const jan1=new Date(yr,0,1);
+  const wk=Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+  const mon=new Date(d);mon.setDate(d.getDate()-d.getDay()+1); // 월요일
+  const fri=new Date(mon);fri.setDate(mon.getDate()+4);        // 금요일
+  return{year:yr,week:wk,label:`${wk}주차`,
+         from:mon.toISOString().slice(0,10),
+         to:fri.toISOString().slice(0,10)};
+}
+let WEEK = calcWeek(new Date());
 
 // ════════════════════════════════════════════════════════════
 // marked + turndown 설정
@@ -572,10 +593,61 @@ function toast(msg,ms=2400){
   setTimeout(()=>t.classList.remove('show'),ms);
 }
 function fd(d){if(!d)return'';const dt=new Date(d);return`${dt.getMonth()+1}.${dt.getDate()}`;}
+function updateWeekLabel(){
+  const el=document.getElementById('wn-lbl');
+  if(!el)return;
+  el.innerHTML=`${WEEK.label} <span class="wn-date">${fd(WEEK.from)}–${fd(WEEK.to)}</span>`;
+}
 function wkKey(){return `${WEEK.year}-W${String(WEEK.week).padStart(2,'0')}`;}
 function sf(s){return s.replace(/ /g,'_').replace(/·/g,'_');}
 function gf(site,yr){return `ipark_${sf(site)}_${yr}.json`;}
-function getCats(site){const t=SITE_TYPE[site];return CATS[t]||CATS['착공'];}
+function getCustomCatsDB(){
+  try{const r=localStorage.getItem('ipark_cats');if(r)return JSON.parse(r);}catch(e){}
+  const def={};
+  SITES.forEach(s=>{ def[s]=[...(CATS[SITE_TYPE[s]]||CATS['착공'])]; });
+  localStorage.setItem('ipark_cats',JSON.stringify(def));
+  return def;
+}
+function saveCustomCatsDB(db){ localStorage.setItem('ipark_cats',JSON.stringify(db)); }
+function getCats(site){
+  const db=getCustomCatsDB();
+  if(db[site]&&db[site].length) return db[site];
+  const t=SITE_TYPE[site]; return CATS[t]||CATS['착공'];
+}
+function addCat(site,name){
+  const db=getCustomCatsDB();
+  if(!db[site]) db[site]=getCats(site);
+  if(db[site].includes(name)){ toast('이미 존재하는 항목입니다'); return false; }
+  db[site].push(name);
+  saveCustomCatsDB(db);
+  return true;
+}
+function renameCat(site,oldName,newName){
+  const db=getCustomCatsDB();
+  if(!db[site]) db[site]=getCats(site);
+  const idx=db[site].indexOf(oldName);
+  if(idx<0) return false;
+  if(db[site].includes(newName)&&newName!==oldName){ toast('이미 존재하는 이름입니다'); return false; }
+  db[site][idx]=newName;
+  saveCustomCatsDB(db);
+  return true;
+}
+function deleteCat(site,name){
+  const db=getCustomCatsDB();
+  if(!db[site]) db[site]=getCats(site);
+  if(db[site].length<=1){ toast('최소 1개 항목은 있어야 합니다'); return false; }
+  db[site]=db[site].filter(c=>c!==name);
+  saveCustomCatsDB(db);
+  return true;
+}
+function reorderCat(site,fromIdx,toIdx){
+  const db=getCustomCatsDB();
+  if(!db[site]) db[site]=getCats(site);
+  const arr=db[site];
+  const [item]=arr.splice(fromIdx,1);
+  arr.splice(toIdx,0,item);
+  saveCustomCatsDB(db);
+}
 
 // ════════════════════════════════════════════════════════════
 // 사용자 DB
@@ -624,7 +696,8 @@ function startApp(){
   document.getElementById('app').style.display='block';
   document.getElementById('user-nm').textContent=curUser.name;
   document.getElementById('admin-btn').style.display=curUser.role==='admin'?'':'none';
-  document.getElementById('wn-lbl').textContent=WEEK.label;
+  document.getElementById('footer-ver').textContent=VER;
+  updateWeekLabel();
   loadRollup();
 }
 // 세션 자동 복원
@@ -788,16 +861,20 @@ function showView(name,navEl){
 // ════════════════════════════════════════════════════════════
 function chgWeek(dir){
   const d=new Date(WEEK.from);d.setDate(d.getDate()+dir*7);
-  const yr=d.getFullYear();
-  const jan1=new Date(yr,0,1);
-  const wk=Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
-  const mon=new Date(d);mon.setDate(d.getDate()-d.getDay()+1);
-  const fri=new Date(mon);fri.setDate(mon.getDate()+4);
-  WEEK={year:yr,week:wk,label:`${wk}주차`,from:mon.toISOString().slice(0,10),to:fri.toISOString().slice(0,10)};
+  WEEK=calcWeek(d);
   dataCache={};etagCache={};
-  document.getElementById('wn-lbl').textContent=WEEK.label;
+  updateWeekLabel();
   loadRollup();
   if(curSite)openDetail(curSite);
+}
+
+function goToThisWeek(){
+  WEEK=calcWeek(new Date());
+  dataCache={};etagCache={};
+  updateWeekLabel();
+  loadRollup();
+  if(curSite)openDetail(curSite);
+  toast('이번 주로 이동했습니다');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -889,26 +966,16 @@ async function openDetail(site){
   document.getElementById('d-crumb').innerHTML=`<strong>${site}</strong>`;
   showView('detail',null);
   document.querySelectorAll('.tb-link').forEach(l=>l.classList.remove('active'));
-  document.getElementById('kpi-row').innerHTML='<div class="loading"><i class="ti ti-loader"></i></div>';
   const data=await fetchSiteData(site);
   const cats=getCats(site);
-  // KPI
-  const allMD=cats.flatMap(c=>data.gongjong?.[c]?.current_md?.split('\n').filter(l=>l.trim().startsWith('- '))||[]);
-  const done=allMD.filter(l=>l.includes('[x]')).length;
-  document.getElementById('kpi-row').innerHTML=[
-    {l:'공정률',v:SITE_TYPE[site]==='착공예정'?'인허가':(data.progress||0)+'%',s:'이번 주'},
-    {l:'완료',v:done+'건',s:`전체 ${allMD.length}건`},
-    {l:'진행 중',v:allMD.filter(l=>l.includes('`진행`')).length+'건',s:'공종 전체'},
-    {l:'요주의',v:allMD.filter(l=>l.includes('`지적`')||l.includes('`대기`')).length+'건',s:'지적·대기'},
-    {l:'주차',v:WEEK.label,s:`${fd(WEEK.from)}–${fd(WEEK.to)}`}
-  ].map(k=>`<div class="kpi-c"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.v}</div><div class="kpi-s">${k.s}</div></div>`).join('');
   if(!curGJ||!cats.includes(curGJ))curGJ=cats[0];
   renderGJSection(site,cats,data);
 }
 
 function renderGJSection(site,cats,data){
   const sec=document.getElementById('gj-section');
-  const tabH='<div class="gj-tabs" id="gj-tabs">'+cats.map(c=>{
+  const edit=canEdit();
+  const tabH='<div class="gj-tabs" id="gj-tabs">'+cats.map((c,idx)=>{
     const md=data.gongjong?.[c]?.current_md||'';
     const items=md.split('\n').filter(l=>l.trim().startsWith('- '));
     const done=items.filter(l=>l.includes('[x]')).length;
@@ -916,11 +983,69 @@ function renderGJSection(site,cats,data){
     const hasW=md.includes('`지적`')||md.includes('`대기`');
     return`<div class="gj-tab${c===curGJ?' active':''}" onclick="switchGJ('${c}')" data-gj="${c}">
       <div class="gj-dot" style="background:${col}"></div>
-      ${c}<span style="font-size:10px;color:${hasW?'var(--red)':'var(--tx3)'}">·${done}/${items.length}</span>
+      <span class="gj-tab-name">${c}</span>
+      <span style="font-size:10px;color:${hasW?'var(--red)':'var(--tx3)'}">·${done}/${items.length}</span>
+      ${edit?`<div class="gj-tab-edit" onclick="event.stopPropagation();openCatEdit('${site}','${c}')" title="이름 변경"><i class="ti ti-pencil"></i></div>`:''}
     </div>`;
-  }).join('')+'</div>';
-  sec.innerHTML=tabH+'<div id="gj-ed-wrap" style="height:calc(100vh - 90px - 44px - 80px - 42px);display:flex;flex-direction:column;overflow:hidden"></div>';
+  }).join('')+(edit?`<div class="gj-tab gj-tab-add" onclick="openCatAdd('${site}')" title="항목 추가"><i class="ti ti-plus"></i>항목 추가</div>`:'')+'</div>';
+  sec.innerHTML=tabH+'<div id="gj-ed-wrap" style="height:calc(100vh - 90px - 44px - 42px - 32px);display:flex;flex-direction:column;overflow:hidden"></div>';
   renderWYEditor(site,curGJ,data);
+}
+
+function openCatAdd(site){
+  showModal(`<h4><i class="ti ti-plus"></i>항목 추가</h4>
+    <div class="fr"><label>새 항목 이름</label><input type="text" id="m-catname" placeholder="예: 안전관리"></div>`,
+    ()=>{
+      const name=document.getElementById('m-catname').value.trim();
+      if(!name){toast('이름을 입력하세요');return false;}
+      if(!addCat(site,name))return false;
+      curGJ=name;
+      fetchSiteData(site).then(data=>{
+        if(!data.gongjong)data.gongjong={};
+        if(!data.gongjong[name])data.gongjong[name]={current_md:'',next_md:''};
+        renderGJSection(site,getCats(site),data);
+      });
+      toast(`'${name}' 항목이 추가되었습니다`);
+    });
+}
+
+function openCatEdit(site,catName){
+  showModal(`<h4><i class="ti ti-pencil"></i>항목 편집</h4>
+    <div class="fr"><label>항목 이름</label><input type="text" id="m-catname2" value="${catName}"></div>
+    <div class="fr" style="display:flex;justify-content:flex-end">
+      <button class="u-del" style="font-size:12px;padding:6px 12px" onclick="confirmDeleteCat('${site}','${catName}')">
+        <i class="ti ti-trash" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>이 항목 삭제</button>
+    </div>`,
+    ()=>{
+      const newName=document.getElementById('m-catname2').value.trim();
+      if(!newName){toast('이름을 입력하세요');return false;}
+      if(newName===catName)return;
+      if(!renameCat(site,catName,newName))return false;
+      fetchSiteData(site).then(data=>{
+        if(data.gongjong&&data.gongjong[catName]){
+          data.gongjong[newName]=data.gongjong[catName];
+          delete data.gongjong[catName];
+        }
+        if(curGJ===catName)curGJ=newName;
+        renderGJSection(site,getCats(site),data);
+        saveSiteData(site,{gongjong:data.gongjong});
+      });
+      toast('이름이 변경되었습니다');
+    });
+}
+
+function confirmDeleteCat(site,catName){
+  if(!confirm(`'${catName}' 항목을 삭제하시겠습니까?\n작성된 내용도 함께 삭제됩니다.`))return;
+  if(!deleteCat(site,catName)){ return; }
+  closeModal();
+  fetchSiteData(site).then(data=>{
+    if(data.gongjong)delete data.gongjong[catName];
+    const newCats=getCats(site);
+    if(curGJ===catName)curGJ=newCats[0];
+    renderGJSection(site,newCats,data);
+    saveSiteData(site,{gongjong:data.gongjong});
+  });
+  toast('삭제되었습니다');
 }
 
 function switchGJ(c){
