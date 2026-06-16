@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v2.5</title>
+<title>천안IPC 주간업무현황 v2.6</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -90,6 +90,44 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 
 /* ── 뷰 ── */
 .view{display:none}.view.active{display:flex;flex-direction:column}
+
+/* ── 단지별 취합 화면 ── */
+.ov-bar{height:44px;background:var(--bg2);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0}
+.ov-site-name{font-size:15px;font-weight:700;color:var(--tx)}
+.ov-bar-r{margin-left:auto;display:flex;align-items:center;gap:6px}
+.ov-compare-hd{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--bd);background:var(--bg3);flex-shrink:0}
+.ov-col-hd{font-size:11px;font-weight:700;color:var(--tx2);padding:8px 16px;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.03em}
+.ov-col-hd:first-child{border-right:1px solid var(--bd)}
+.ov-col-hd i{font-size:13px}
+.ov-body{flex:1;overflow-y:auto}
+.ov-gj-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--bd)}
+.ov-gj-cell{padding:12px 16px}
+.ov-gj-cell:first-child{border-right:1px solid var(--bd)}
+.ov-gj-label{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.ov-gj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ov-gj-name{font-size:12px;font-weight:700;color:var(--tx);cursor:pointer}
+.ov-gj-name:hover{color:var(--blue)}
+.ov-gj-cnt{font-size:10px;color:var(--tx3);margin-left:auto;font-weight:600}
+.ov-gj-body{font-size:11px;color:var(--tx2);line-height:1.6}
+.ov-gj-body h1{font-size:14px;font-weight:700;color:var(--tx);margin:5px 0 3px}
+.ov-gj-body h1:first-child{margin-top:0}
+.ov-gj-body h2{font-size:13px;font-weight:700;color:var(--tx);margin:5px 0 3px}
+.ov-gj-body h2:first-child{margin-top:0}
+.ov-gj-body h3{font-size:12px;font-weight:600;color:var(--tx);margin:5px 0 2px}
+.ov-gj-body h3:first-child{margin-top:0}
+.ov-gj-body h4{font-size:11px;font-weight:600;color:var(--tx);margin:4px 0 2px}
+.ov-gj-body ul{margin:2px 0 2px 14px}
+.ov-gj-body li{margin-bottom:2px;line-height:1.5}
+.ov-gj-body li input[type=checkbox]{margin-right:4px;accent-color:var(--blue);pointer-events:none}
+.ov-gj-body strong{font-weight:600;color:var(--tx)}
+.ov-gj-body code{font-family:'SF Mono','Fira Code',monospace;font-size:10px;background:var(--bg3);padding:1px 4px;border-radius:3px;border:0.5px solid var(--bd)}
+.ov-gj-body blockquote{border-left:2px solid var(--bd2);padding:2px 8px;color:var(--tx3);margin:3px 0;background:var(--bg3);border-radius:0 3px 3px 0;font-size:10px}
+.ov-gj-body p{margin-bottom:2px}
+.ov-gj-body .bd{background:var(--green-bg);color:var(--green-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.ov-gj-body .bp{background:var(--blue-bg);color:var(--blue-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.ov-gj-body .by{background:var(--amber-bg);color:var(--amber-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.ov-gj-body .bw{background:var(--red-bg);color:var(--red-tx);font-size:9px;padding:1px 5px;border-radius:99px}
+.ov-empty{font-size:11px;color:var(--tx3);font-style:italic}
 
 /* ── 롤업 ── */
 .rollup{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
@@ -380,9 +418,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
       <span class="co">HDC현대산업개발</span>
       <span class="nm">천안IPC 통합현장</span>
     </div>
-    <div class="tb-nav">
-      <div class="tb-link active" id="nav-home" onclick="showView('home',this)">
-        <i class="ti ti-layout-dashboard" aria-hidden="true"></i>전체 현황</div>
+    <div class="tb-nav" id="tb-nav">
+      <div class="tb-link site-nav-link active" id="nav-site-3단지" onclick="openSiteOverview('3단지',this)">3단지</div>
+      <div class="tb-link site-nav-link" id="nav-site-4단지" onclick="openSiteOverview('4단지',this)">4단지</div>
+      <div class="tb-link site-nav-link" id="nav-site-5단지" onclick="openSiteOverview('5단지',this)">5단지</div>
+      <div class="tb-link site-nav-link" id="nav-site-6단지" onclick="openSiteOverview('6단지',this)">6단지</div>
+      <div class="tb-link site-nav-link" id="nav-site-기반시설" onclick="openSiteOverview('기반시설',this)">기반시설</div>
+      <div class="tb-link site-nav-link" id="nav-site-DX_TFT" onclick="openSiteOverview('DX TFT',this)">DX TFT</div>
       <div class="tb-link" id="nav-cal" onclick="showView('cal',this)">
         <i class="ti ti-calendar-event" aria-hidden="true"></i>주요 일정</div>
     </div>
@@ -400,27 +442,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
     </div>
   </div>
 
-  <!-- 홈 -->
-  <div class="view active" id="view-home">
-    <div class="subbar">
-      <span class="sb-lbl">현장</span>
-      <div class="chip on-all" onclick="filterSite(this,'all')">전체</div>
-      <div class="chip" onclick="filterSite(this,'3단지')">3단지</div>
-      <div class="chip" onclick="filterSite(this,'4단지')">4단지</div>
-      <div class="chip" onclick="filterSite(this,'5단지')">5단지</div>
-      <div class="chip" onclick="filterSite(this,'6단지')">6단지</div>
-      <div class="chip" onclick="filterSite(this,'기반시설')">기반시설</div>
-      <div class="chip" onclick="filterSite(this,'DX TFT')">DX TFT</div>
+  <!-- 단지별 취합 화면 -->
+  <div class="view active" id="view-overview">
+    <div class="ov-bar">
+      <span class="ov-site-name" id="ov-site-name">3단지</span>
+      <div class="ov-bar-r">
+        <div class="icon-btn" id="ov-edit-btn" onclick="openDetail(curOvSite)" title="편집 화면으로 이동">
+          <i class="ti ti-edit"></i></div>
+      </div>
     </div>
-    <div class="rollup" id="rollup"><div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div></div>
+    <div class="ov-compare-hd">
+      <div class="ov-col-hd"><i class="ti ti-hammer" aria-hidden="true"></i>금주 진행사항</div>
+      <div class="ov-col-hd"><i class="ti ti-calendar-event" aria-hidden="true"></i>차주 예정사항</div>
+    </div>
+    <div class="ov-body" id="ov-body"><div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div></div>
   </div>
 
   <!-- 상세 -->
   <div class="view" id="view-detail">
     <div class="dv" id="detail-inner">
       <div class="dv-bar">
-        <div class="back-btn" onclick="showView('home',document.getElementById('nav-home'))">
-          <i class="ti ti-arrow-left"></i>전체 현황</div>
+        <div class="back-btn" onclick="backToOverview()">
+          <i class="ti ti-arrow-left"></i>취합 화면</div>
         <span style="color:var(--bd2);font-size:15px;margin:0 2px">/</span>
         <span class="crumb" id="d-crumb"><strong></strong></span>
         <div class="dv-bar-r">
@@ -517,7 +560,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v2.5  2025-06-12 09:20';
+const VER = 'v2.6  2025-06-12 10:40';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -793,7 +836,7 @@ function startApp(){
   document.getElementById('admin-btn').style.display=curUser.role==='admin'?'':'none';
   document.getElementById('footer-ver').textContent=VER;
   updateWeekLabel();
-  loadRollup();
+  openSiteOverview('3단지',document.getElementById('nav-site-3단지'));
 }
 // 앱 초기화 — Firebase에서 사용자/카테고리 선로드 후 세션 복원
 async function initApp(){
@@ -963,21 +1006,30 @@ function showView(name,navEl){
 // ════════════════════════════════════════════════════════════
 // 주차 변경
 // ════════════════════════════════════════════════════════════
+async function refreshCurrentView(){
+  const homeActive=document.getElementById('view-overview')?.classList.contains('active');
+  const detailActive=document.getElementById('view-detail')?.classList.contains('active');
+  if(detailActive&&curSite){
+    await openDetail(curSite);
+  } else if(homeActive&&curOvSite){
+    const data=await fetchSiteData(curOvSite);
+    renderOverview(curOvSite,data);
+  }
+}
+
 function chgWeek(dir){
   const d=new Date(WEEK.from);d.setDate(d.getDate()+dir*7);
   WEEK=calcWeek(d);
   dataCache={};etagCache={};
   updateWeekLabel();
-  loadRollup();
-  if(curSite)openDetail(curSite);
+  refreshCurrentView();
 }
 
 function goToThisWeek(){
   WEEK=calcWeek(new Date());
   dataCache={};etagCache={};
   updateWeekLabel();
-  loadRollup();
-  if(curSite)openDetail(curSite);
+  refreshCurrentView();
   toast('이번 주로 이동했습니다');
 }
 
@@ -985,81 +1037,65 @@ function goToThisWeek(){
 // 롤업 홈
 // ════════════════════════════════════════════════════════════
 const STAGS={'착공':'t-blue','착공예정':'t-amber','기반시설':'t-teal','DX TFT':'t-purple'};
-async function loadRollup(){
-  const div=document.getElementById('rollup');
-  div.innerHTML='<div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div>';
-  const rows=[];
-  for(const s of SITES)rows.push({site:s,data:await fetchSiteData(s)});
-  renderRollup(rows);
-}
-function renderRollup(rows){
-  const div=document.getElementById('rollup');
-  div.innerHTML=rows.map(({site,data})=>{
-    const t=SITE_TYPE[site];
-    const pct=data.progress||0;
-    const col=PROG_COL[t]||'#1A5FA8';
-    const sc=data.status==='정상'?'st-ok':data.status==='지연'?'st-red':'st-warn';
-    const cats=getCats(site);
-    const sk=site.replace(/\s/g,'_');
+let curOvSite = '3단지';
 
-    // 모든 공종의 전체 작성 내용 취합 — 금주 진행사항만 (간결한 전체현황 취지)
-    const allCatsH = cats.map(c=>{
-      const md=(data.gongjong?.[c]?.current_md||'').trim();
-      const items=md.split('\n').filter(l=>l.trim().startsWith('- '));
-      const done=items.filter(l=>l.includes('[x]')).length;
-      const hasW=md.includes('\`지적\`')||md.includes('\`대기\`');
-      const bodyHtml = md
-        ? stripFirstHeading(marked.parse(md))
-        : '<div class="rollup-empty">작성된 내용 없음</div>';
-      return`<div class="rollup-gj-block">
-        <div class="rollup-gj-hd">
-          <span class="rollup-gj-dot" style="background:${GJ_COL[c]||'var(--blue)'}"></span>
-          <span class="rollup-gj-name">${c}</span>
-          ${items.length?`<span class="rollup-gj-cnt" style="color:${hasW?'var(--red)':'var(--tx3)'}">${done}/${items.length}</span>`:''}
-        </div>
-        <div class="rollup-gj-body">${bodyHtml}</div>
-      </div>`;
-    }).join('');
-
-    return`<div class="site-card" data-site="${site}" id="sc-${sk}">
-      <div class="site-head exp" onclick="toggleInline('${sk}')">
-        <span class="s-tag ${STAGS[t]||'t-blue'}">${t}</span>
-        <span class="s-name">${site}</span>
-        <span class="s-type">${t!=='DX TFT'&&t!=='기반시설'?'아이파크시티':''}</span>
-        <div class="s-right">
-          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
-          <span class="prog-pct">${t==='착공예정'?'인허가':pct+'%'}</span>
-          <span class="s-status ${sc}">${data.status||'정상'}</span>
-          <div class="open-btn" onclick="event.stopPropagation();openDetail('${site}')" title="상세 편집">
-            <i class="ti ti-layout-sidebar-right-expand"></i></div>
-        </div>
-      </div>
-      <div class="inline-body open" id="ib-${sk}">
-        <div class="rollup-all-cats">${allCatsH}</div>
-      </div>
-    </div>`;
-  }).join('');
+async function openSiteOverview(site,navEl){
+  curOvSite=site;
+  showView('overview',null);
+  document.querySelectorAll('.site-nav-link').forEach(l=>l.classList.remove('active'));
+  if(navEl)navEl.classList.add('active');
+  document.getElementById('ov-site-name').textContent=site;
+  const body=document.getElementById('ov-body');
+  body.innerHTML='<div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div>';
+  const data=await fetchSiteData(site);
+  renderOverview(site,data);
 }
 
 function stripFirstHeading(html){
   return html.replace(/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/,'');
 }
-function toggleInline(sk){
-  const ib=document.getElementById('ib-'+sk);
-  const hd=document.querySelector('#sc-'+sk+' .site-head');
-  if(!ib)return;
-  const open=ib.classList.toggle('open');
-  if(hd)hd.classList.toggle('exp',open);
-}
-function filterSite(chip,site){
-  document.querySelectorAll('.subbar .chip').forEach(c=>{c.className='chip';});
-  const cls={'all':'on-all','3단지':'on-3','4단지':'on-4','5단지':'on-5','6단지':'on-6','기반시설':'on-inf','DX TFT':'on-dx'};
-  chip.className='chip '+(cls[site]||'on-all');
-  document.querySelectorAll('.site-card').forEach(card=>{
-    card.style.display=(site==='all'||card.dataset.site===site)?'':'none';
-  });
+
+function renderOverview(site,data){
+  const cats=getCats(site);
+  const body=document.getElementById('ov-body');
+  body.innerHTML=cats.map(c=>{
+    const curMd=(data.gongjong?.[c]?.current_md||'').trim();
+    const nxtMd=(data.gongjong?.[c]?.next_md||'').trim();
+    const items=curMd.split('\n').filter(l=>l.trim().startsWith('- '));
+    const done=items.filter(l=>l.includes('[x]')).length;
+    const hasW=curMd.includes('`지적`')||curMd.includes('`대기`');
+    const curH = curMd ? stripFirstHeading(marked.parse(curMd)) : '<div class="ov-empty">작성된 내용 없음</div>';
+    const nxtH = nxtMd ? stripFirstHeading(marked.parse(nxtMd)) : '<div class="ov-empty">작성된 내용 없음</div>';
+    return`<div class="ov-gj-row">
+      <div class="ov-gj-cell">
+        <div class="ov-gj-label">
+          <span class="ov-gj-dot" style="background:${GJ_COL[c]||'var(--blue)'}"></span>
+          <span class="ov-gj-name" onclick="openDetailAt('${site}','${c}')">${c}</span>
+          ${items.length?`<span class="ov-gj-cnt" style="color:${hasW?'var(--red)':'var(--tx3)'}">${done}/${items.length}</span>`:''}
+        </div>
+        <div class="ov-gj-body">${curH}</div>
+      </div>
+      <div class="ov-gj-cell">
+        <div class="ov-gj-label">
+          <span class="ov-gj-dot" style="background:${GJ_COL[c]||'var(--blue)'}"></span>
+          <span class="ov-gj-name" onclick="openDetailAt('${site}','${c}')">${c}</span>
+        </div>
+        <div class="ov-gj-body">${nxtH}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
+function openDetailAt(site,cat){
+  curGJ=cat;
+  openDetail(site);
+}
+
+function backToOverview(){
+  const site=curSite||curOvSite||'3단지';
+  const navId='nav-site-'+site.replace(/ /g,'_');
+  openSiteOverview(site,document.getElementById(navId));
+}
 // ════════════════════════════════════════════════════════════
 // 상세 뷰 — contenteditable WYSIWYG
 // ════════════════════════════════════════════════════════════
@@ -1295,8 +1331,55 @@ function tbHTML(w){
 // execCommand 래퍼
 function ceExec(w,cmd,val){
   focusCE(w);
+  if(cmd==='formatBlock'){
+    setHeading(w,val);
+    return;
+  }
   document.execCommand(cmd,false,val||null);
   updateWStat();
+}
+
+// formatBlock의 브라우저별 비일관성을 회피하기 위해 직접 DOM으로 블록 태그를 적용
+function setHeading(w,tag){
+  const ce=document.getElementById('ce-'+w);
+  if(!ce)return;
+  focusCE(w);
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount)return;
+  let node=sel.getRangeAt(0).startContainer;
+  // 현재 블록 요소(가장 가까운 블록 레벨 부모) 찾기
+  const blockTags=['P','H1','H2','H3','H4','DIV','LI','BLOCKQUOTE'];
+  while(node && node!==ce && !(node.nodeType===1 && blockTags.includes(node.nodeName))){
+    node=node.parentNode;
+  }
+  if(!node || node===ce){
+    // 블록이 없으면 현재 선택 위치에 새 헤딩 생성
+    const newEl=document.createElement(tag);
+    newEl.innerHTML=sel.toString()||'\u200b';
+    const r=sel.getRangeAt(0);
+    r.deleteContents();
+    r.insertNode(newEl);
+    placeCaretAtEnd(newEl);
+  } else if(node.nodeName==='LI'){
+    // 목록 항목은 그대로 두고 텍스트만 변환 대상에서 제외 (목록 구조 보존)
+    return;
+  } else {
+    // 기존 블록을 새 태그로 교체 (내용 보존)
+    const newEl=document.createElement(tag);
+    newEl.innerHTML=node.innerHTML;
+    node.replaceWith(newEl);
+    placeCaretAtEnd(newEl);
+  }
+  updateWStat();
+}
+
+function placeCaretAtEnd(el){
+  const range=document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel=window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
 
 function focusCE(w){
