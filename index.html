@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.0.1</title>
+<title>천안IPC 주간업무현황 v3.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -209,6 +209,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .gj-tab-add{color:var(--blue)!important;border-bottom-color:transparent!important;gap:4px}
 .gj-tab-add:hover{background:var(--blue-bg)!important}
 .gj-tab-add i{font-size:17px}
+.gj-drag-handle{width:14px;height:20px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--tx3);opacity:0;flex-shrink:0;margin-right:1px}
+.gj-drag-handle i{font-size:13px;pointer-events:none}
+.gj-tab:hover .gj-drag-handle{opacity:.5}
+.gj-drag-handle:hover{opacity:1!important;color:var(--tx)}
+.gj-drag-handle:active{cursor:grabbing}
+.gj-tab-dragging{opacity:.35;background:var(--bg3)!important;border-bottom:2px dashed var(--bd2)!important}
+.gj-tab-drag-over{background:var(--blue-bg)!important;border-left:3px solid var(--blue)}
 
 /* ── WYSIWYG 에디터 ── */
 .wy-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;border-top:1px solid var(--bd)}
@@ -567,7 +574,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.0.1  2025-06-12 18:45';
+const VER = 'v3.1  2025-06-12 19:30';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -914,6 +921,14 @@ async function deleteCat(site,name){
   CATS_CACHE[site][curKey]=CATS_CACHE[site][curKey].filter(c=>c!==name);
   await persistCats();
   return true;
+}
+
+async function reorderCat(site,fromIdx,toIdx){
+  const curKey=ensureCurrentSnapshot(site);
+  const arr=CATS_CACHE[site][curKey];
+  const [item]=arr.splice(fromIdx,1);
+  arr.splice(toIdx,0,item);
+  await persistCats();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1288,7 +1303,8 @@ async function renderGJSection(site,cats,data){
     const done=items.filter(l=>l.includes('[x]')).length;
     const col=GJ_COL[c]||'var(--blue)';
     const hasW=md.includes('`지적`')||md.includes('`대기`');
-    return`<div class="gj-tab${c===curGJ?' active':''}" onclick="switchGJ('${c}')" data-gj="${c}">
+    return`<div class="gj-tab${c===curGJ?' active':''}" onclick="switchGJ('${c}')" data-gj="${c}" data-idx="${idx}" draggable="${edit?'true':'false'}">
+      ${edit?`<div class="gj-drag-handle" onmousedown="event.stopPropagation()" title="드래그하여 순서 변경"><i class="ti ti-grip-vertical"></i></div>`:''}
       <div class="gj-dot" style="background:${col}"></div>
       <span class="gj-tab-name">${c}</span>
       <span style="font-size:13px;color:${hasW?'var(--red)':'var(--tx3)'}">·${done}/${items.length}</span>
@@ -1296,7 +1312,52 @@ async function renderGJSection(site,cats,data){
     </div>`;
   }).join('')+(edit?`<div class="gj-tab gj-tab-add" onclick="openCatAdd('${site}')" title="항목 추가"><i class="ti ti-plus"></i>항목 추가</div>`:'')+'</div>';
   sec.innerHTML=tabH+'<div id="gj-ed-wrap" style="height:calc(100vh - 98px - 50px - 48px - 36px);display:flex;flex-direction:column;overflow:hidden"></div>';
+  if(edit) initTabDragDrop(site,cats);
   await renderWYEditor(site,curGJ,data);
+}
+
+// ── 탭 드래그&드롭 순서 변경 ─────────────────────────────────
+function initTabDragDrop(site, cats){
+  const container=document.getElementById('gj-tabs');
+  if(!container) return;
+  let dragSrc=null, dragSrcIdx=-1;
+
+  container.querySelectorAll('.gj-tab[draggable="true"]').forEach(tab=>{
+    tab.addEventListener('dragstart',e=>{
+      dragSrc=tab;
+      dragSrcIdx=parseInt(tab.dataset.idx);
+      tab.classList.add('gj-tab-dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain', dragSrcIdx);
+    });
+    tab.addEventListener('dragend',()=>{
+      tab.classList.remove('gj-tab-dragging');
+      container.querySelectorAll('.gj-tab').forEach(t=>t.classList.remove('gj-tab-drag-over'));
+    });
+    tab.addEventListener('dragover',e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      if(tab!==dragSrc){
+        container.querySelectorAll('.gj-tab').forEach(t=>t.classList.remove('gj-tab-drag-over'));
+        tab.classList.add('gj-tab-drag-over');
+      }
+    });
+    tab.addEventListener('dragleave',()=>{
+      tab.classList.remove('gj-tab-drag-over');
+    });
+    tab.addEventListener('drop',async e=>{
+      e.preventDefault();
+      tab.classList.remove('gj-tab-drag-over');
+      const toIdx=parseInt(tab.dataset.idx);
+      if(dragSrcIdx===toIdx || isNaN(dragSrcIdx) || isNaN(toIdx)) return;
+      const movedCatName=dragSrc?.dataset?.gj||curGJ; // 드래그한 공종명 기억 → 드롭 후 선택 유지
+      await reorderCat(site, dragSrcIdx, toIdx);
+      const data=await fetchSiteData(site);
+      curGJ=movedCatName; // 드래그한 공종이 이동 후에도 선택 상태 유지
+      await renderGJSection(site, getCats(site), data);
+      toast('순서가 변경되었습니다');
+    });
+  });
 }
 
 function openCatAdd(site){
