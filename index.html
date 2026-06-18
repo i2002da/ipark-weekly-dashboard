@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.0</title>
+<title>천안IPC 주간업무현황 v3.0.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -567,7 +567,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.0  2025-06-12 18:20';
+const VER = 'v3.0.1  2025-06-12 18:45';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -616,7 +616,7 @@ const PROG_COL = {'착공':'#1A5FA8','착공예정':'#8A5009','기반시설':'#0
 let IS_DEMO = false;
 let curUser = null;
 let curSite = '', curGJ = '';
-let calYear = 2025, calMonth = 5;
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let calEvents = [];
 let EVENT_TYPES_CACHE = null;
 let calEventsLoaded = false;
