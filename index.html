@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v2.9.1</title>
+<title>천안IPC 주간업무현황 v3.0</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -302,6 +302,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .cal-body{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:12px}
 .cal-hint{font-size:13px;color:var(--tx3);display:flex;align-items:center;gap:5px}
 .cal-hint i{font-size:14px}
+.cal-site-leg{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cal-site-leg-lbl{font-size:13px;color:var(--tx3);font-weight:700}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden}
 .cal-dow{background:var(--bg3);text-align:center;font-size:13px;font-weight:700;color:var(--tx3);padding:6px 0;letter-spacing:.04em}
 .cal-dow.sun{color:var(--red)}.cal-dow.sat{color:var(--blue)}
@@ -311,7 +313,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .cal-cell.other .cal-dn{opacity:.3}
 .cal-dn{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:2px}
 .cal-dn.sun{color:var(--red)}.cal-dn.sat{color:var(--blue)}
-.cal-ev{font-size:13px;padding:1px 4px;border-radius:3px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5}
+.cal-ev{font-size:13px;padding:1px 5px 1px 6px;border-radius:3px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5;cursor:pointer}
 .ev-ext{background:var(--red-bg);color:var(--red-tx)}
 .ev-int{background:var(--blue-bg);color:var(--blue-tx)}
 .ev-dx{background:var(--purple-bg);color:var(--purple-tx)}
@@ -325,6 +327,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .ev-date{font-size:14px;color:var(--tx3);width:38px;flex-shrink:0;font-weight:600}
 .ev-type{font-size:13px;padding:2px 6px;border-radius:99px;flex-shrink:0;font-weight:700}
 .ev-title{font-size:16px;color:var(--tx);flex:1;font-weight:500}
+.ev-site-tag{font-size:14px;font-weight:700}
 .ev-site-lbl{font-size:13px;color:var(--tx3)}
 .ev-del{width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx3);border-radius:3px}
 .ev-del:hover{color:var(--red)}.ev-del i{font-size:14px}
@@ -499,6 +502,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
     </div>
     <div class="cal-body">
       <div class="cal-hint"><i class="ti ti-info-circle"></i>날짜를 클릭해 일정을 추가하고, 일정을 클릭해 수정할 수 있습니다.</div>
+      <div class="cal-site-leg" id="cal-site-leg"></div>
       <div class="cal-grid" id="cal-grid"></div>
       <div class="ev-lhdr"><span id="ev-cnt"></span></div>
       <div class="ev-list" id="ev-list"></div>
@@ -563,7 +567,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v2.9.1  2025-06-12 17:05';
+const VER = 'v3.0  2025-06-12 18:20';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1841,6 +1845,23 @@ function evTypeStyle(typeKey){
   return found||{key:typeKey,dot:'#5A5955',bg:'#EEECEA',fg:'#5A5955'};
 }
 
+// 현장별 고정 색상 — 캘린더에서 일정의 소속 현장을 시각적으로 구분
+const SITE_EV_COLOR = {
+  '통합':    {dot:'#5A5955', bg:'#EEECEA', fg:'#3A3935'},
+  '3단지':   {dot:'#C97A1E', bg:'#FBF0DC', fg:'#7A4A0E'},
+  '4단지':   {dot:'#B8590B', bg:'#FCE8D8', fg:'#7A3B07'},
+  '5단지':   {dot:'#1A5FA8', bg:'#EAF1FB', fg:'#0B3F7A'},
+  '6단지':   {dot:'#0E7FBF', bg:'#E2F2FB', fg:'#0A4F73'},
+  '기반시설': {dot:'#0C6B52', bg:'#E0F4EE', fg:'#084835'},
+  'DX TFT':  {dot:'#4E45B0', bg:'#EEEDFE', fg:'#332E84'}
+};
+function siteEvStyle(siteCode){
+  return SITE_EV_COLOR[siteCode] || SITE_EV_COLOR['통합'];
+}
+function evTitleWithSite(e){
+  return `(${e.site_code}) ${e.title}`;
+}
+
 async function renderCal(){
   if(!calEventsLoaded) await loadCalEventsFromFirebase();
   const y=calYear,m=calMonth;
@@ -1867,8 +1888,9 @@ async function renderCal(){
     const evs=byDay[d]||[];
     const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const evH=evs.slice(0,2).map(e=>{
-      const t=evTypeStyle(e.event_type);
-      return`<div class="cal-ev" style="background:${t.bg};color:${t.fg}" title="${e.title}" onclick="event.stopPropagation();openEditEvent('${e.id}')">${e.title}</div>`;
+      const st=siteEvStyle(e.site_code);
+      const labeled=evTitleWithSite(e);
+      return`<div class="cal-ev" style="background:${st.bg};color:${st.fg};border-left:3px solid ${st.dot}" title="${labeled}" onclick="event.stopPropagation();openEditEvent('${e.id}')">${labeled}</div>`;
     }).join('');
     const more=evs.length>2?`<div class="ev-more" onclick="event.stopPropagation();openDayEvents('${dateStr}')">+${evs.length-2}건</div>`:'';
     html+=`<div class="cal-cell${isT?' today':''}" onclick="openAddEvent(null,'${dateStr}')"><div class="cal-dn${dow===0?' sun':dow===6?' sat':''}">${d}</div>${evH}${more}</div>`;
@@ -1885,13 +1907,13 @@ async function renderCal(){
   document.getElementById('ev-cnt').textContent=`${y}년 ${m+1}월 전체 일정 (${sorted.length}건)`;
   document.getElementById('ev-list').innerHTML=sorted.map(e=>{
     const t=evTypeStyle(e.event_type);
+    const st=siteEvStyle(e.site_code);
     const dd=e.date.slice(5).replace('-','.');
-    return`<div class="ev-item" onclick="openEditEvent('${e.id}')" style="cursor:pointer">
-      <div class="ev-dot" style="background:${t.dot}"></div>
+    return`<div class="ev-item" onclick="openEditEvent('${e.id}')" style="cursor:pointer;border-left:3px solid ${st.dot}">
+      <div class="ev-dot" style="background:${t.dot}" title="${e.event_type}"></div>
       <div class="ev-date">${dd}</div>
       <div class="ev-type" style="background:${t.bg};color:${t.fg}">${e.event_type}</div>
-      <div class="ev-title">${e.title}</div>
-      <div class="ev-site-lbl">${e.site_code}</div>
+      <div class="ev-title"><span class="ev-site-tag" style="color:${st.fg}">(${e.site_code})</span> ${e.title}</div>
       <div class="ev-del" onclick="event.stopPropagation();delEvent('${e.id}')"><i class="ti ti-x"></i></div>
     </div>`;
   }).join('');
@@ -1900,9 +1922,18 @@ async function renderCal(){
 
 function renderLegend(){
   const leg=document.getElementById('cal-leg');
-  if(!leg)return;
-  const types=getEventTypes();
-  leg.innerHTML=types.map(t=>`<div class="leg"><div class="leg-dot" style="background:${t.dot}"></div>${t.key}</div>`).join('');
+  if(leg){
+    const types=getEventTypes();
+    leg.innerHTML=types.map(t=>`<div class="leg"><div class="leg-dot" style="background:${t.dot}"></div>${t.key}</div>`).join('');
+  }
+  const siteLeg=document.getElementById('cal-site-leg');
+  if(siteLeg){
+    const sites=['통합',...SITES];
+    siteLeg.innerHTML='<span class="cal-site-leg-lbl">현장</span>'+sites.map(s=>{
+      const st=siteEvStyle(s);
+      return`<div class="leg"><div class="leg-dot" style="background:${st.dot}"></div>${s}</div>`;
+    }).join('');
+  }
 }
 
 function chgMonth(d){
@@ -1925,10 +1956,10 @@ function openDayEvents(dateStr){
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       ${evs.map(e=>{
         const t=evTypeStyle(e.event_type);
-        return`<div class="urow" style="cursor:pointer" onclick="closeModal();openEditEvent('${e.id}')">
+        const st=siteEvStyle(e.site_code);
+        return`<div class="urow" style="cursor:pointer;border-left:3px solid ${st.dot}" onclick="closeModal();openEditEvent('${e.id}')">
           <span class="u-role" style="background:${t.bg};color:${t.fg}">${e.event_type}</span>
-          <span class="u-nm" style="flex:1">${e.title}</span>
-          <span class="u-id">${e.site_code}</span>
+          <span class="u-nm" style="flex:1"><span style="color:${st.fg};font-weight:600">(${e.site_code})</span> ${e.title}</span>
         </div>`;
       }).join('')}
     </div>
