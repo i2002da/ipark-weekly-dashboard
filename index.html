@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v2.7</title>
+<title>천안IPC 주간업무현황 v2.8</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -565,7 +565,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v2.7  2025-06-12 11:30';
+const VER = 'v2.8  2025-06-12 14:10';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1266,6 +1266,8 @@ async function renderWYEditor(site,cat,data){
       <div class="wy-pane-hd">
         <h4>${w==='cur'?`<i class="ti ti-hammer"></i>금주 진행사항`:`<i class="ti ti-calendar-event"></i>차주 예정사항`}</h4>
         <span class="wy-badge ${w==='cur'?'wyb-cur':'wyb-nxt'}">${w==='cur'?fd(WEEK.from)+'–'+fd(WEEK.to):nwRange()}</span>
+        ${w==='cur'&&edit?`<div class="wy-copy-btn" id="copy-prev-btn" onclick="copyFromPrevWeek()" title="전주 차주 예정사항 내용을 금주 진행사항으로 복사">
+          <i class="ti ti-arrow-down-circle"></i>전주 내용 가져오기</div>`:''}
         ${w==='nxt'&&edit?`<div class="wy-copy-btn" id="copy-cur-btn" onclick="copyFromCur()" title="금주 진행사항 내용을 차주 예정사항으로 복사">
           <i class="ti ti-copy"></i>금주 내용 가져오기</div>`:''}
       </div>
@@ -1504,6 +1506,36 @@ function copyFromCur(){
   });
   updateWStat();
   toast('금주 진행사항 내용이 차주 예정사항으로 복사되었습니다');
+}
+
+async function copyFromPrevWeek(){
+  const ceCur=document.getElementById('ce-cur');
+  if(!ceCur)return;
+  if(IS_DEMO){ toast('데모 모드에서는 전주 데이터를 불러올 수 없습니다'); return; }
+  const btn=document.getElementById('copy-prev-btn');
+  if(btn){ btn.style.pointerEvents='none'; btn.innerHTML='<i class="ti ti-loader"></i> 불러오는 중...'; }
+  try{
+    const prevWk=prevWeekInfo();
+    const prevData=await fetchSiteDataForWeek(curSite,prevWk);
+    const prevNextMd=prevData?.gongjong?.[curGJ]?.next_md;
+    if(!prevNextMd || !prevNextMd.trim()){
+      toast(`전주(${prevWk.label}) 차주 예정사항에 작성된 내용이 없습니다`);
+      return;
+    }
+    if(ceCur.innerHTML.trim() && !confirm('금주 진행사항에 이미 작성된 내용이 있습니다.\n전주 차주 예정사항 내용으로 덮어쓸까요?')) return;
+    const cleanMd=stripFirstHeading2(prevNextMd);
+    ceCur.innerHTML = cleanMd.trim() ? marked.parse(cleanMd) : '';
+    ceCur.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.disabled=false;
+      cb.addEventListener('change',()=>updateWStat());
+    });
+    updateWStat();
+    toast(`전주(${prevWk.label}) 차주 예정사항 내용을 가져왔습니다`);
+  }catch(e){
+    toast('전주 내용 불러오기 실패: '+e.message);
+  }finally{
+    if(btn){ btn.style.pointerEvents=''; btn.innerHTML='<i class="ti ti-arrow-down-circle"></i>전주 내용 가져오기'; }
+  }
 }
 
 function insertTable(w){
