@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.3</title>
+<title>천안IPC 주간업무현황 v3.3.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -640,7 +640,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.3  2025-06-13 11:20';
+const VER = 'v3.3.1  2025-06-13 14:00';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2279,8 +2279,8 @@ const VERSION_HISTORY = [
   { ver:'v3.0',  date:'2025-06-12', tag:'new',    items:['캘린더 일정에 (현장명) 접두사 자동 표시', '현장별 색상 구분 (3단지=주황, 5단지=파랑, 6단지=청록, DX TFT=보라 등)', '하단 일정 목록·날짜 모달에도 현장 색상 적용'] },
   { ver:'v2.9.1',date:'2025-06-12', tag:'fix',    items:['일정 저장 시 2개씩 중복 생성되는 버그 수정', 'Firebase 실시간 리스너와 로컬 push 경합 제거', 'on() 단일 리스너로 단순화해 불필요한 이중 fetch 제거'] },
   { ver:'v2.9',  date:'2025-06-12', tag:'new',    items:['캘린더 날짜 클릭 → 일정 추가, 일정 클릭 → 수정/삭제', '일정 데이터 Firebase 영구 저장 (새로고침 후에도 유지)', '일정 분류(대외·대내·DX·공정) 이름·색상 추가/수정/삭제 가능', '공종 항목 변경이 현재 주차 이후에만 적용 (과거 주차 보존)'] },
-  { ver:'v2.8',  date:'2025-06-12', tag:'new',    items:['금주 진행사항에 '전주 내용 가져오기' 버튼 추가 (수동 트리거)', '전주의 차주 예정사항을 언제든 클릭으로 금주 칸에 복사'] },
-  { ver:'v2.7',  date:'2025-06-12', tag:'new',    items:['전주 차주예정 → 금주 진행사항 자동 반영 (빈 칸일 때)', '차주 예정사항에 '금주 내용 가져오기' 버튼 추가', '전체 화면 폰트 크기 130% 확대'] },
+  { ver:'v2.8',  date:'2025-06-12', tag:'new',    items:['금주 진행사항에 \'전주 내용 가져오기\' 버튼 추가 (수동 트리거)', '전주의 차주 예정사항을 언제든 클릭으로 금주 칸에 복사'] },
+  { ver:'v2.7',  date:'2025-06-12', tag:'new',    items:['전주 차주예정 → 금주 진행사항 자동 반영 (빈 칸일 때)', '차주 예정사항에 \'금주 내용 가져오기\' 버튼 추가', '전체 화면 폰트 크기 130% 확대'] },
   { ver:'v2.6',  date:'2025-06-12', tag:'change', items:['H1~H4 서식 적용 — execCommand 대신 직접 DOM 조작으로 브라우저 호환성 문제 해결', '전체현황 통합 화면 삭제', '상단 탭을 현장별(3단지~DX TFT)로 전환', '단지별 금주/차주 대비 화면 신설 (공종명 클릭 → 편집 진입)'] },
   { ver:'v2.5',  date:'2025-06-12', tag:'new',    items:['전체현황 페이지에 모든 공종 작성 내용 전체 취합 표시', '금주 진행사항 첫 줄 공종 제목 자동 제거', 'H1·H2 서식 버튼 툴바 및 / 명령어에 추가'] },
   { ver:'v2.4',  date:'2025-06-11', tag:'change', items:['데이터 저장소를 GitHub Gist에서 Firebase Realtime Database로 전환', 'Gist API 호출 완전 제거 — 토큰 입력 불필요', '사용자 계정·공종 항목 Firebase 실시간 동기화'] },
