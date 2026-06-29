@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.3.1</title>
+<title>천안IPC 주간업무현황 v3.4</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -407,6 +407,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .rm{background:var(--blue-bg);color:var(--blue-tx)}
 .rv{background:var(--bg3);color:var(--tx2);border:0.5px solid var(--bd)}
 .u-act{display:flex;gap:4px}
+.u-reset{font-size:14px;padding:2px 7px;border:0.5px solid var(--bd2);border-radius:5px;cursor:pointer;background:var(--bg2);color:var(--tx2)}
+.u-reset:hover{background:var(--amber-bg);color:var(--amber);border-color:transparent}
 .u-del{font-size:14px;padding:2px 7px;border:0.5px solid var(--bd2);border-radius:5px;cursor:pointer;background:var(--bg2);color:var(--tx2)}
 .u-del:hover{background:var(--red-bg);color:var(--red);border-color:transparent}
 .up-form{background:var(--bg3);border:0.5px solid var(--bd);border-radius:var(--r);padding:12px}
@@ -640,7 +642,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.3.1  2025-06-13 14:00';
+const VER = 'v3.4  2025-06-13 15:00';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2566,6 +2568,36 @@ function helpSyncToc(){
 // ════════════════════════════════════════════════════════════
 function openUP(){renderUList();document.getElementById('up-overlay').style.display='flex';}
 function closeUP(){document.getElementById('up-overlay').style.display='none';}
+async function resetPassword(userId, userName){
+  showModal(`<h4><i class="ti ti-lock-open"></i>비밀번호 초기화</h4>
+    <div class="fr">
+      <label><strong>${userName}</strong> (${userId}) 사용자의 새 비밀번호</label>
+      <input type="password" id="m-new-pw" placeholder="새 비밀번호 입력 (6자 이상)" autocomplete="new-password">
+    </div>
+    <div class="fr">
+      <label>비밀번호 확인</label>
+      <input type="password" id="m-new-pw2" placeholder="새 비밀번호 재입력" autocomplete="new-password">
+    </div>
+    <div class="help-note" style="margin-top:6px">
+      <i class="ti ti-info-circle"></i>
+      초기화 후 해당 사용자에게 새 비밀번호를 별도로 안내해주세요.
+    </div>`,
+    async()=>{
+      const pw  = document.getElementById('m-new-pw').value;
+      const pw2 = document.getElementById('m-new-pw2').value;
+      if(!pw)       { toast('새 비밀번호를 입력하세요'); return false; }
+      if(pw.length<6){ toast('6자 이상으로 입력하세요'); return false; }
+      if(pw!==pw2)  { toast('비밀번호가 일치하지 않습니다'); return false; }
+      const users = getUserDB();
+      const u = users.find(x=>x.id===userId);
+      if(!u){ toast('사용자를 찾을 수 없습니다'); return false; }
+      u.pw = btoa(pw);
+      await saveUserDB(users);
+      renderUList();
+      toast(`'${userName}' 비밀번호가 초기화되었습니다`);
+    });
+}
+
 function renderUList(){
   const RLBL={admin:'관리자',manager:'매니저',viewer:'조회자'};
   const RCLS={admin:'ra',manager:'rm',viewer:'rv'};
@@ -2575,7 +2607,12 @@ function renderUList(){
       <div style="flex:1"><div class="u-nm">${u.name} <span class="u-id">(${u.id})</span></div>
         <div style="font-size:13px;color:var(--tx3)">${u.site||'전체 현장'}</div></div>
       <span class="u-role ${RCLS[u.role]||'rv'}">${RLBL[u.role]||u.role}</span>
-      ${u.id!=='admin'?`<div class="u-act"><div class="u-del" onclick="delUser('${u.id}')"><i class="ti ti-trash" style="font-size:14px"></i></div></div>`:''}
+      ${u.id!=='admin'?`<div class="u-act">
+        <div class="u-reset" onclick="resetPassword('${u.id}','${u.name}')" title="비밀번호 초기화">
+          <i class="ti ti-lock-open" style="font-size:14px"></i></div>
+        <div class="u-del" onclick="delUser('${u.id}')">
+          <i class="ti ti-trash" style="font-size:14px"></i></div>
+      </div>`:''}
     </div>`).join('');
 }
 async function addUser(){
