@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.4</title>
+<title>천안IPC 주간업무현황 v3.4.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -642,7 +642,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.4  2025-06-13 15:00';
+const VER = 'v3.4.1  2025-06-13  23:26';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2276,6 +2276,11 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+    { ver:'v3.4.1', date:'2025-06-13', tag:'fix',    items:['버전이력 누락 보완 — v3.2·v3.3·v3.3.1·v3.4 항목 도움말 화면에 추가', '버전 관리 자동화 — 이후 모든 릴리즈에서 VER·타이틀·버전이력을 동시 업데이트'] },
+  { ver:'v3.4',  date:'2025-06-13', tag:'new',    items:['관리자가 다른 사용자 비밀번호를 직접 초기화 가능', '사용자 관리 패널 각 사용자 행에 자물쇠 아이콘으로 즉시 초기화', 'Firebase에 즉시 저장, 해당 사용자 다음 로그인 즉시 적용'] },
+  { ver:'v3.3.1',date:'2025-06-13', tag:'fix',    items:['치명적 버그 수정 — 버전이력 텍스트의 이스케이프 안 된 작은따옴표로 전체 스크립트가 파싱 실패, 로그인 포함 모든 기능 마비', 'Node.js 문법 검사 + 브라우저 콘솔 직접 검증으로 원인 확정', 'v3.2 도입 이후 모든 PC에서 로그인 불가였던 문제 해결'] },
+  { ver:'v3.3',  date:'2025-06-13', tag:'fix',    items:['Firebase 초기화를 try/catch로 보호 — SDK 차단 시에도 앱이 멈추지 않음', 'Firebase 연결 실패를 조용한 기본계정 폴백 대신 명확한 에러 메시지로 안내', '로그인 화면에 서버 연결 상태 사전 경고 배너 추가', '다시 시도 버튼으로 재연결 기능 추가'] },
+  { ver:'v3.2',  date:'2025-06-13', tag:'new',    items:['도움말·사용설명서 화면 추가 (상단 탭 + 하단 버전 클릭)', '좌측 고정 목차 + 스크롤 연동 활성화', '버전 이력 화면 내장 (신기능/버그수정/변경 태그 구분)', '8개 섹션: 개요·로그인·화면구성·주간보고·공종관리·일정·FAQ·버전이력'] },
   { ver:'v3.1',  date:'2025-06-12', tag:'new',    items:['공종 탭 드래그&드롭으로 순서 변경 (관리자·매니저 권한)', 'Firebase에 즉시 저장, 모든 사용자에게 실시간 반영', '과거 주차의 항목 순서도 독립적으로 보존'] },
   { ver:'v3.0.1',date:'2025-06-12', tag:'fix',    items:['주요 일정 화면 기본 표시 달 → 오늘 날짜 기준으로 수정'] },
   { ver:'v3.0',  date:'2025-06-12', tag:'new',    items:['캘린더 일정에 (현장명) 접두사 자동 표시', '현장별 색상 구분 (3단지=주황, 5단지=파랑, 6단지=청록, DX TFT=보라 등)', '하단 일정 목록·날짜 모달에도 현장 색상 적용'] },
