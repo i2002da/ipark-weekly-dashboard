@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.6</title>
+<title>천안IPC 주간업무현황 v3.7</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -474,10 +474,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
     <button class="login-btn" id="li-btn" onclick="doLogin()">
       <i class="ti ti-login"></i>로그인
     </button>
-    <div class="login-demo" onclick="demoMode()">
-      <i class="ti ti-eye" style="font-size:16px;vertical-align:-1px"></i>
-      데모 모드로 보기
-    </div>
     <div class="login-ver" id="login-ver"></div>
   </div>
 </div>
@@ -645,7 +641,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.6  2026-07-12  23:18';
+const VER = 'v3.7  2026-07-21  05:42';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1241,7 +1237,7 @@ async function saveSiteData(site,patch){
 function buildInitData(site){
   const t=SITE_TYPE[site];const cats=CATS[t]||[];
   const gj={};
-  cats.forEach(c=>{gj[c]={current_md:`### ${c}\n\n- [ ] \`예정\` 항목을 입력하세요\n`,next_md:''};});
+  cats.forEach(c=>{gj[c]={current_md:'',next_md:''};});
   return{progress:0,status:'정상',gongjong:gj,updated_by:'',updated_at:''};
 }
 function initDemoData(){
@@ -1384,7 +1380,6 @@ function renderOverview(site,data){
         <div class="ov-gj-label">
           <span class="ov-gj-dot" style="background:${GJ_COL[c]||'var(--blue)'}"></span>
           <span class="ov-gj-name" onclick="openDetailAt('${site}','${c}')">${c}</span>
-          ${items.length?`<span class="ov-gj-cnt" style="color:${hasW?'var(--red)':'var(--tx3)'}">${done}/${items.length}</span>`:''}
         </div>
         <div class="ov-gj-body">${curH}</div>
       </div>
@@ -1436,7 +1431,6 @@ async function renderGJSection(site,cats,data){
       ${edit?`<div class="gj-drag-handle" onmousedown="event.stopPropagation()" title="드래그하여 순서 변경"><i class="ti ti-grip-vertical"></i></div>`:''}
       <div class="gj-dot" style="background:${col}"></div>
       <span class="gj-tab-name">${c}</span>
-      <span style="font-size:13px;color:${hasW?'var(--red)':'var(--tx3)'}">·${done}/${items.length}</span>
       ${edit?`<div class="gj-tab-edit" onclick="event.stopPropagation();openCatEdit('${site}','${c}')" title="이름 변경"><i class="ti ti-pencil"></i></div>`:''}
     </div>`;
   }).join('')+(edit?`<div class="gj-tab gj-tab-add" onclick="openCatAdd('${site}')" title="항목 추가"><i class="ti ti-plus"></i>항목 추가</div>`:'')+'</div>';
@@ -1610,7 +1604,7 @@ async function renderWYEditor(site,cat,data){
       </div>
       ${edit?`<div class="wy-toolbar" id="tb-${w}">${tbHTML(w)}</div>`:''}
       <div class="wy-ce" id="ce-${w}" ${edit?'contenteditable="true"':'contenteditable="false"'}
-        data-ph="${w==='cur'?'내용을 입력하세요. / 를 입력하면 블록 메뉴가 나타납니다':'차주 예정 사항을 입력하세요'}"
+        data-ph="${w==='cur'?'금주 진행 사항을 입력하세요':'차주 예정 사항을 입력하세요'}"
         data-which="${w}"
         ${edit?`oninput="onCEInput(this)" onkeydown="onCEKey(event,this)"`:''}
         ></div>
@@ -2279,6 +2273,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+    { ver:'v3.7', date:'2026-07-21', tag:'change',    items:['로그인 화면 "데모 모드로 보기" 버튼 삭제', '금주 진행사항 초기 입력항목(예정 문구) 삭제, 빈 상태로 시작', '금주 진행사항 입력창 안내문구를 "금주 진행 사항을 입력하세요"로 변경', '공종 탭·취합 화면의 완료/전체 건수 숫자 표시 삭제'] },
     { ver:'v3.6', date:'2026-07-12', tag:'change',    items:['캘린더 날짜 칸에 표시되는 일정 개수 2건 → 4건으로 확대', '5건 이상일 때만 "+N건"으로 표시 (기존 3건 이상에서 완화)', '일정 4개를 담을 수 있도록 날짜 칸 높이 확장', '"+N건" 표시를 파란색·굵은 글씨로 강조해 클릭 유도'] },
     { ver:'v3.5.1', date:'2026-07-02', tag:'fix',    items:['버전 표시 날짜 오류 수정 — 실제 시스템 날짜와 1년 이상 차이나던 문제 해결', '버전 관리 유틸리티가 항상 실제 시스템 날짜를 자동으로 사용하도록 개선 (수동 입력 오류 방지)'] },
     { ver:'v3.5', date:'2025-06-14', tag:'new',    items:['관리자가 다른 사용자의 권한(관리자·매니저·조회자)을 직접 변경 가능', '사용자 목록에서 권한 배지를 클릭 → 드롭다운으로 즉시 변경', 'admin 계정 자신의 권한은 변경 불가 (실수 방지)', '도움말에 사용자 관리 섹션 신설 — 권한변경·비밀번호초기화·삭제 통합 안내'] },
