@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.13</title>
+<title>천안IPC 주간업무현황 v3.14</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -159,6 +159,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .ov-band-title span{font-size:15px;font-weight:500;color:#A8B4C4;margin-left:8px}
 .ov-write-btn{height:44px;padding:0 18px;border:none;border-radius:10px;background:#F5B83D;color:#0F1B2D;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
 .ov-write-btn:hover{background:#FFC95C}
+.ov-band-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ov-wk-nav{display:flex;gap:4px}
+.ov-wk-btn{height:44px;padding:0 14px;border:1px solid #33445C;border-radius:10px;background:transparent;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px}
+.ov-wk-btn:hover{background:#1F3352;border-color:#4A6488}
+.ov-wk-btn.cur{background:#1F3352;border-color:#9CC3FF}
+.ov-wk-past{font-size:12px;font-weight:700;background:#F5B83D;color:#0F1B2D;border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:3px}
 .ov-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .ov-tile{background:#16253B;border:1px solid #26374F;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;color:#fff;text-align:left;font-family:inherit;min-height:44px}
 .ov-tile:hover{border-color:#4A6488}
@@ -712,7 +718,14 @@ img,table{max-width:100%}
             <div class="ov-band-co">HDC현대산업개발 · 천안IPC 통합현장</div>
             <h1 class="ov-band-title">주간업무 현황판<span id="ov-band-wk"></span></h1>
           </div>
-          <button type="button" class="ov-write-btn" id="ov-write-btn" onclick="openDetail(curOvSite)"><i class="ti ti-edit" aria-hidden="true"></i>업무 작성</button>
+          <div class="ov-band-act">
+            <div class="ov-wk-nav" role="group" aria-label="주차 이동">
+              <button type="button" class="ov-wk-btn" onclick="chgWeek(-1)"><i class="ti ti-chevron-left" aria-hidden="true"></i>지난주</button>
+              <button type="button" class="ov-wk-btn" id="ov-wk-now" onclick="goToThisWeek()">이번 주</button>
+              <button type="button" class="ov-wk-btn" onclick="chgWeek(1)">다음주<i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+            </div>
+            <button type="button" class="ov-write-btn" id="ov-write-btn" onclick="openDetail(curOvSite)"><i class="ti ti-edit" aria-hidden="true"></i>업무 작성</button>
+          </div>
         </div>
         <div class="ov-tiles" id="ov-tiles"></div>
       </div>
@@ -859,7 +872,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.13  2026-10-30  08:47';
+const VER = 'v3.14  2026-10-30  08:51';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1649,7 +1662,11 @@ function siteSummary(site,data){
 }
 async function renderOvBand(){
   const wk=document.getElementById('ov-band-wk');
-  if(wk) wk.textContent=`${WEEK.label} · ${fd(WEEK.from)} – ${fd(WEEK.to)}`;
+  // 이번 주가 아니면 '지난 기록'/'다음 주' 표시, [이번 주] 버튼은 이번 주일 때 강조
+  const thisWk=calcWeek(new Date()), diff=Math.round((new Date(WEEK.from)-new Date(thisWk.from))/864e5/7);
+  if(wk) wk.innerHTML=`${WEEK.label} · ${fd(WEEK.from)} – ${fd(WEEK.to)}`
+    +(diff<0?`<span class="ov-wk-past">${-diff}주 전</span>`:diff>0?`<span class="ov-wk-past">${diff}주 후</span>`:'');
+  document.getElementById('ov-wk-now')?.classList.toggle('cur',diff===0);
   const wb=document.getElementById('ov-write-btn');
   if(wb) wb.style.display=canEdit()?'':'none';
   const el=document.getElementById('ov-tiles'); if(!el) return;
@@ -2592,6 +2609,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.14', date:'2026-10-30', tag:'new', items:['현황판 상단에 [지난주]·[이번 주]·[다음주] 버튼 추가 — 메인 화면에서 다른 주차의 현황보고를 바로 조회', '이번 주가 아닌 주차를 볼 때 제목 옆에 "n주 전"·"n주 후" 표시'] },
   { ver:'v3.13', date:'2026-10-30', tag:'change', items:['단지별 취합 화면 디자인 변경(현장 관제형) — 상단에 6개 단지 현황 타일(작성 여부, 금주·차주 항목 수) 표시, 타일을 누르면 해당 단지로 이동', '금주/차주 대비를 카드 형태로 정리하고 마지막 수정 시각·작성자 표시', '오른쪽에 이번 주 주요 일정(월~일) 목록 추가 — 일정을 누르면 수정, [달력 전체 보기]로 이동', '[업무 작성] 버튼 추가(작성 권한이 있는 사용자만 표시)'] },
   { ver:'v3.12', date:'2026-10-30', tag:'change', items:['아이패드 등 태블릿 화면 확대 배율을 2배로 변경 — 핸드폰과 같은 배치(금주/차주 위아래)로 크게 표시', 'PC·핸드폰 화면은 변경 없음'] },
   { ver:'v3.11', date:'2026-10-30', tag:'fix', items:['아이패드 등 태블릿에서 글씨가 너무 작게 보이던 문제 개선 — 화면 전체를 가로 약 1.2배, 세로 약 1.17배(금주/차주 2열 유지) 확대 표시', 'PC·핸드폰 화면은 변경 없음'] },
