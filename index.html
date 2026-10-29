@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <script>
-// 아이패드 등 태블릿: viewport 폭을 줄여 화면 전체를 TABLET_SCALE 배 확대해 보이게 한다 (v3.11)
+// 아이패드 등 태블릿: viewport 폭을 줄여 화면 전체를 TABLET_SCALE 배 확대해 보이게 한다 (v3.11~)
+// MIN_W 를 704 로 두면 세로 화면에서 금주/차주 2열 대비를 유지(그만큼 덜 확대됨)
 // PC 브라우저는 viewport 메타를 무시하므로 영향 없음, 폰(짧은 변 700 미만)은 제외
-// 세로 화면은 폭 704px 이상을 유지해 금주/차주 2열 대비(모바일 700px 이하 레이아웃 아님)를 지킨다
+// 2배 확대(v3.12) — 폭이 700px 이하가 되어 핸드폰과 같은 레이아웃(금주/차주 위아래 배치)으로 표시됨
 (function(){
-  var TABLET_SCALE=1.2, MIN_W=704;
+  var TABLET_SCALE=2, MIN_W=0;
   var s=Math.min(screen.width,screen.height), l=Math.max(screen.width,screen.height);
   if(!(navigator.maxTouchPoints>1 && s>=700 && s<=1100)) return;
   var m=document.querySelector('meta[name=viewport]');
@@ -20,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.11</title>
+<title>천안IPC 주간업무현황 v3.12</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -795,7 +796,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.11  2026-10-30  07:59';
+const VER = 'v3.12  2026-10-30  08:04';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2481,6 +2482,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.12', date:'2026-10-30', tag:'change', items:['아이패드 등 태블릿 화면 확대 배율을 2배로 변경 — 핸드폰과 같은 배치(금주/차주 위아래)로 크게 표시', 'PC·핸드폰 화면은 변경 없음'] },
   { ver:'v3.11', date:'2026-10-30', tag:'fix', items:['아이패드 등 태블릿에서 글씨가 너무 작게 보이던 문제 개선 — 화면 전체를 가로 약 1.2배, 세로 약 1.17배(금주/차주 2열 유지) 확대 표시', 'PC·핸드폰 화면은 변경 없음'] },
   { ver:'v3.10', date:'2026-10-29', tag:'new', items:['사용자 관리에 [인사정보 엑셀로 일괄 등록] 추가 — 조건별인사정보 엑셀을 선택하면 사번을 아이디로 한꺼번에 등록(공무 담당은 관리자, 그 외 매니저, 담당 현장은 본 소속 부서 기준)', '일괄 등록 초기 비밀번호는 사번(4자리 사번은 두 번 이어 씀), 초기 비밀번호로 로그인하면 새 비밀번호로 바꾸기 전까지 사용할 수 없도록 변경 창 표시'] },
   { ver:'v3.9', date:'2026-10-29', tag:'new', items:['보안 강화 — Firebase Authentication(이메일/비밀번호) 기반 로그인으로 전환, 비밀번호를 DB에 저장하지 않음', '기존 계정은 처음 로그인하는 순간 기존 비밀번호 그대로 자동 전환되며, DB의 기존 비밀번호는 삭제됨', '사용자 정보(이름·권한)는 인증 계정(uid)별로 저장 — 관리자 사용자 관리 화면에 미전환 사용자 안내 표시', '비밀번호 초기화는 새 인증 계정을 발급해 아이디에 연결하는 방식으로 변경, 본인 비밀번호 변경은 현재 비밀번호 재인증 후 처리', '사용자 관리 창에서 팝업(권한 변경·비밀번호 초기화)이 뒤에 가려지던 문제 수정'] },
