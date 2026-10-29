@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.8.1</title>
+<title>천안IPC 주간업무현황 v3.9</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1/dist/turndown-plugin-gfm.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{
   --bg:#F5F4F0;--bg2:#fff;--bg3:#EEECEA;
@@ -454,7 +455,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-x:hidden}
 img,table{max-width:100%}
-.modal-bg{position:fixed}
+.modal-bg{position:fixed;z-index:700}
 .modal{max-width:94vw;max-height:92vh;overflow-y:auto}
 .cal-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
 .tb-nav{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-width:0}
@@ -730,6 +731,7 @@ img,table{max-width:100%}
     <div class="up-body">
       <div class="up-sec">등록된 사용자</div>
       <div id="user-list"></div>
+      <div id="legacy-notice"></div>
       <div class="up-sec" style="margin-top:6px">새 사용자 추가</div>
       <div class="up-form">
         <div class="up-grid">
@@ -773,7 +775,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.8.1  2026-10-29  16:21';
+const VER = 'v3.9  2026-10-29  16:31';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -793,6 +795,7 @@ const firebaseConfig = {
   measurementId: "G-QD8017ERGY"
 };
 let fbDB = null;
+let fbAuth = null;
 let FB_INIT_ERROR = null;
 try{
   if(typeof firebase === 'undefined'){
@@ -800,6 +803,7 @@ try{
   }
   firebase.initializeApp(firebaseConfig);
   fbDB = firebase.database();
+  fbAuth = firebase.auth();
 }catch(e){
   FB_INIT_ERROR = e;
   console.error('Firebase 초기화 실패:', e);
@@ -1143,52 +1147,95 @@ async function reorderCat(site,fromIdx,toIdx){
 // ════════════════════════════════════════════════════════════
 // 사용자 DB
 // ════════════════════════════════════════════════════════════
-// 사용자 DB — Firebase 동기화 + 메모리 캐시 (전 직원 동일 계정 공유)
-let USERS_CACHE = null;
+// 사용자 인증 — Firebase Authentication (이메일/비밀번호)
+// · 아이디는 내부적으로 가상 이메일(u<hex>@ipark.local)로 변환되어 인증됨
+// · 비밀번호는 DB에 저장하지 않으며 Firebase Authentication이 해시로 보관
+// · 사용자 정보(이름·권한)는 profiles/{uid}, 아이디→이메일 매핑은 usernames/{hex(id)}
+const AUTH_SUFFIX = '@ipark.local';
+let PROFILES = [];
 
-function defaultUsersDB(){
-  return [
-    {id:'admin',   pw:btoa('admin1234'), name:'관리자',  role:'admin',   site:''},
-    {id:'manager1',pw:btoa('pass1234'),  name:'현장관리', role:'manager', site:''},
-    {id:'viewer1', pw:btoa('view1234'),  name:'조회자',  role:'viewer',  site:''}
-  ];
+function idHex(id){
+  return Array.from(new TextEncoder().encode(id)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function defaultEmail(id){ return 'u'+idHex(id)+AUTH_SUFFIX; }
+function resetEmail(id){ return 'u'+idHex(id)+'r'+Date.now().toString(36)+AUTH_SUFFIX; }
+
+async function resolveEmail(id){
+  try{
+    const snap = await fbDB.ref(`${FB_ROOT}/usernames/${idHex(id)}`).once('value');
+    const v = snap.val();
+    if(v && v.email) return v.email;
+  }catch(e){}
+  return defaultEmail(id);
 }
 
-let FB_USERS_LOAD_FAILED = false;
+async function loadMyProfile(uid){
+  const snap = await fbDB.ref(`${FB_ROOT}/profiles/${uid}`).once('value');
+  const v = snap.val();
+  return v ? Object.assign({uid}, v) : null;
+}
 
-async function loadUsersFromFirebase(){
-  if(!fbDB){
-    FB_USERS_LOAD_FAILED = true;
-    USERS_CACHE = null; // 폴백하지 않음 — 연결 실패 상태를 명확히 유지
-    return;
-  }
+// 기존(비밀번호를 DB에 저장하던) 계정 → Firebase Authentication 으로 자동 전환
+// 처음 로그인하는 순간 입력한 비밀번호로 인증 계정을 만들고, DB의 평문(btoa) 비밀번호는 삭제한다.
+async function migrateLegacyUser(id,pw,email){
+  let list;
   try{
     const snap = await fbDB.ref(`${FB_ROOT}/users`).once('value');
-    const val = snap.val();
-    if(val && Array.isArray(val) && val.length){
-      USERS_CACHE = val;
-      FB_USERS_LOAD_FAILED = false;
-    } else {
-      USERS_CACHE = defaultUsersDB();
-      await fbDB.ref(`${FB_ROOT}/users`).set(USERS_CACHE);
-      FB_USERS_LOAD_FAILED = false;
-    }
+    list = snap.val();
+  }catch(e){ return null; }
+  if(!Array.isArray(list)) return null;
+  const idx = list.findIndex(x=>x && x.id===id && x.pw && x.pw===btoa(pw));
+  if(idx<0) return null;
+  const old = list[idx];
+  let cred;
+  try{
+    cred = await fbAuth.createUserWithEmailAndPassword(email,pw);
   }catch(e){
-    console.error('사용자 DB 로드 실패 — 네트워크/방화벽 문제일 수 있습니다:', e);
-    FB_USERS_LOAD_FAILED = true;
-    USERS_CACHE = null; // 폴백하지 않음 — 잘못된 기본 계정으로 오인되는 것을 방지
+    if(e.code==='auth/weak-password'){ const er=new Error('weak'); er.code='legacy-weak'; throw er; }
+    return null;
   }
+  const uid = cred.user.uid;
+  await fbDB.ref(`${FB_ROOT}/profiles/${uid}`).set({id:old.id,name:old.name,role:old.role,site:old.site||''});
+  await fbDB.ref(`${FB_ROOT}/usernames/${idHex(id)}`).set({email,uid});
+  try{ await fbDB.ref(`${FB_ROOT}/users/${idx}/pw`).remove(); }catch(e){}
+  return cred;
 }
 
-function getUserDB(){
-  if(!USERS_CACHE) USERS_CACHE = defaultUsersDB();
-  return USERS_CACHE;
+// 호환 모드 — Authentication 미설정 상태에서만 사용 (기존 users 노드의 비밀번호로 로그인)
+let LEGACY_MODE=false;
+async function legacyLogin(id,pw){
+  let list;
+  try{ const snap=await fbDB.ref(`${FB_ROOT}/users`).once('value'); list=snap.val(); }catch(e){ return false; }
+  if(!Array.isArray(list)) return false;
+  const u=list.find(x=>x&&x.id===id&&x.pw&&x.pw===btoa(pw));
+  if(!u) return false;
+  LEGACY_MODE=true;
+  curUser={uid:'legacy:'+u.id,id:u.id,name:u.name,role:u.role,site:u.site||''}; IS_DEMO=false;
+  await loadAllData();
+  startApp();
+  document.getElementById('admin-btn').style.display='none';
+  setTimeout(()=>toast('보안 인증 모드 미적용 — 관리자는 Firebase 콘솔에서 Authentication을 사용 설정하세요'),600);
+  return true;
 }
 
-async function saveUserDB(u){
-  USERS_CACHE = u;
-  try{ await fbDB.ref(`${FB_ROOT}/users`).set(u); }
-  catch(e){ toast('사용자 정보 저장 실패: '+e.message); }
+async function loadAllData(){
+  await Promise.all([
+    loadCatsFromFirebase(),
+    loadEventTypesFromFirebase(),
+    loadCalEventsFromFirebase()
+  ]);
+}
+
+async function enterApp(prof){
+  curUser=prof; IS_DEMO=false;
+  localStorage.setItem('ipark_session',JSON.stringify({uid:prof.uid,ts:Date.now()}));
+  await loadAllData();
+  startApp();
+}
+
+function loginConnError(err){
+  err.innerHTML='서버에 연결할 수 없습니다. 네트워크 또는 회사 방화벽에서<br>firebasedatabase.app / googleapis.com / gstatic.com 접속이 차단되었을 수 있습니다.<br>'
+    +'<span style="color:var(--blue);cursor:pointer;text-decoration:underline" onclick="doLogin()">다시 시도</span>';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1200,43 +1247,47 @@ async function doLogin(){
   const err=document.getElementById('li-err');
   const btn=document.getElementById('li-btn');
   if(!id||!pw){err.textContent='아이디와 비밀번호를 입력하세요.';return;}
+  err.innerHTML='';
+  if(!fbDB||!fbAuth){ loginConnError(err); return; }
 
-  if(!USERS_CACHE){
-    btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> 서버 연결 중...';
-    err.innerHTML='';
-    await loadUsersFromFirebase();
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> 로그인 중...';
+  try{
+    const email=await resolveEmail(id);
+    let cred=null;
+    try{
+      cred=await fbAuth.signInWithEmailAndPassword(email,pw);
+    }catch(e){
+      if(e.code==='auth/configuration-not-found'||e.code==='auth/operation-not-allowed'){
+        // Firebase 콘솔에서 Authentication 이 아직 켜지지 않은 경우 — 기존 방식으로 임시 로그인 (보안 전환 전 호환 모드)
+        const ok=await legacyLogin(id,pw);
+        if(!ok) err.textContent='아이디 또는 비밀번호가 틀렸습니다.';
+        return;
+      }
+      if(['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials','auth/wrong-password','auth/invalid-email'].includes(e.code)){
+        cred=await migrateLegacyUser(id,pw,email);
+        if(!cred){ err.textContent='아이디 또는 비밀번호가 틀렸습니다.'; return; }
+      } else throw e;
+    }
+    const prof=await loadMyProfile(cred.user.uid);
+    if(!prof){
+      await fbAuth.signOut();
+      err.textContent='등록된 사용자 정보가 없습니다. 관리자에게 문의하세요.';
+      return;
+    }
+    await enterApp(prof);
+  }catch(e){
+    console.error('로그인 오류',e);
+    if(e.code==='auth/network-request-failed') loginConnError(err);
+    else if(e.code==='auth/too-many-requests') err.textContent='로그인 시도가 너무 많습니다. 잠시 후 다시 시도하세요.';
+    else if(e.code==='legacy-weak') err.textContent='비밀번호가 6자 미만이라 전환할 수 없습니다. 관리자에게 비밀번호 초기화를 요청하세요.';
+    else if(e.code==='auth/operation-not-allowed') err.textContent='Firebase 콘솔에서 이메일/비밀번호 로그인이 사용 설정되지 않았습니다. 관리자에게 문의하세요.';
+    else if(String(e.code||e.message).includes('PERMISSION_DENIED')||/permission_denied/i.test(e.message||'')) err.textContent='접근 권한이 없습니다. 관리자에게 문의하세요.';
+    else err.textContent='로그인 중 오류가 발생했습니다: '+(e.code||e.message);
+  }finally{
     btn.disabled=false; btn.innerHTML='<i class="ti ti-login"></i>로그인';
   }
-
-  // 서버 연결 자체가 실패한 경우 — 잘못된 비밀번호로 오인하지 않도록 명확히 구분 안내
-  if(!USERS_CACHE || FB_USERS_LOAD_FAILED){
-    err.innerHTML='서버에 연결할 수 없습니다. 네트워크 또는 회사 방화벽에서<br>firebasedatabase.app / gstatic.com 접속이 차단되었을 수 있습니다.<br>'
-      +'<span style="color:var(--blue);cursor:pointer;text-decoration:underline" onclick="retryLogin()">다시 시도</span>';
-    return;
-  }
-
-  const u=getUserDB().find(x=>x.id===id&&x.pw===btoa(pw));
-  if(!u){err.textContent='아이디 또는 비밀번호가 틀렸습니다.';return;}
-  curUser=u; IS_DEMO=false;
-  localStorage.setItem('ipark_session',JSON.stringify({id:u.id,ts:Date.now()}));
-  if(!CATS_CACHE) await loadCatsFromFirebase();
-  startApp();
 }
 
-async function retryLogin(){
-  const err=document.getElementById('li-err');
-  const btn=document.getElementById('li-btn');
-  err.innerHTML='';
-  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> 재연결 중...';
-  await loadUsersFromFirebase();
-  await loadCatsFromFirebase();
-  btn.disabled=false; btn.innerHTML='<i class="ti ti-login"></i>로그인';
-  if(FB_USERS_LOAD_FAILED){
-    err.innerHTML='여전히 연결할 수 없습니다. 네트워크 상태를 확인하거나<br>관리자에게 문의하세요.';
-  } else {
-    toast('서버 연결이 복구되었습니다. 다시 로그인해 주세요.');
-  }
-}
 async function demoMode(){
   IS_DEMO=true; curUser={id:'demo',name:'데모',role:'viewer',site:''};
   await loadCatsFromFirebase();
@@ -1245,6 +1296,9 @@ async function demoMode(){
 }
 function doLogout(){
   localStorage.removeItem('ipark_session');
+  try{ fbCalRef().off(); fbEventTypesRef().off(); fbCatsRef().off(); }catch(e){}
+  calEventsListenerAttached=false; calEventsLoaded=false; calEvents=[]; CATS_CACHE=null;
+  try{ if(fbAuth) fbAuth.signOut(); }catch(e){}
   curUser=null; IS_DEMO=false; dataCache={}; etagCache={};
   helpRendered=false; // 로그아웃 후 재로그인 시 도움말 재렌더
   document.getElementById('app').style.display='none';
@@ -1262,34 +1316,32 @@ function startApp(){
   updateWeekLabel();
   openSiteOverview('3단지',document.getElementById('nav-site-3단지'));
 }
-// 앱 초기화 — Firebase에서 사용자/카테고리 선로드 후 세션 복원
+// 앱 초기화 — 저장된 인증 세션이 있으면 복원 (8시간 유효)
 async function initApp(){
-  await Promise.all([
-    loadUsersFromFirebase(),
-    loadCatsFromFirebase(),
-    loadEventTypesFromFirebase(),
-    loadCalEventsFromFirebase()
-  ]);
-
   const warnEl = document.getElementById('login-conn-warn');
-  if(warnEl){
-    if(!fbDB || FB_USERS_LOAD_FAILED){
+  if(!fbDB || !fbAuth){
+    if(warnEl){
       warnEl.style.display='flex';
-      warnEl.innerHTML='<i class="ti ti-wifi-off"></i><span>서버에 연결할 수 없습니다. 사내 네트워크나 보안 프로그램에서<br>firebasedatabase.app 접속이 차단되었을 수 있습니다. 관리자에게 문의하세요.</span>';
-    } else {
-      warnEl.style.display='none';
+      warnEl.innerHTML='<i class="ti ti-wifi-off"></i><span>서버에 연결할 수 없습니다. 사내 네트워크나 보안 프로그램에서<br>gstatic.com / firebasedatabase.app 접속이 차단되었을 수 있습니다.</span>';
     }
+    return;
   }
-
-  const s=localStorage.getItem('ipark_session');
-  if(!s) return;
-  try{
-    const{id,ts}=JSON.parse(s);
-    if(Date.now()-ts>8*3600*1000){localStorage.removeItem('ipark_session');return;}
-    const u=getUserDB().find(x=>x.id===id);
-    if(!u)return;
-    curUser=u; IS_DEMO=false; startApp();
-  }catch(e){}
+  const unsub = fbAuth.onAuthStateChanged(async user=>{
+    unsub();
+    if(!user) return;
+    try{
+      const raw=localStorage.getItem('ipark_session');
+      const ses=raw?JSON.parse(raw):null;
+      if(!ses || ses.uid!==user.uid || Date.now()-ses.ts>8*3600*1000){
+        localStorage.removeItem('ipark_session');
+        await fbAuth.signOut();
+        return;
+      }
+      const prof=await loadMyProfile(user.uid);
+      if(!prof){ await fbAuth.signOut(); return; }
+      await enterApp(prof);
+    }catch(e){ console.warn('세션 복원 실패',e); }
+  });
 }
 initApp();
 
@@ -2405,6 +2457,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.9', date:'2026-10-29', tag:'new', items:['보안 강화 — Firebase Authentication(이메일/비밀번호) 기반 로그인으로 전환, 비밀번호를 DB에 저장하지 않음', '기존 계정은 처음 로그인하는 순간 기존 비밀번호 그대로 자동 전환되며, DB의 기존 비밀번호는 삭제됨', '사용자 정보(이름·권한)는 인증 계정(uid)별로 저장 — 관리자 사용자 관리 화면에 미전환 사용자 안내 표시', '비밀번호 초기화는 새 인증 계정을 발급해 아이디에 연결하는 방식으로 변경, 본인 비밀번호 변경은 현재 비밀번호 재인증 후 처리', '사용자 관리 창에서 팝업(권한 변경·비밀번호 초기화)이 뒤에 가려지던 문제 수정'] },
   { ver:'v3.8.1', date:'2026-10-29', tag:'fix', items:['아이패드 등 태블릿에서 화면이 지나치게 넓게 보이던 문제 수정 — 본문 폭을 최대 980px로 제한하고 가운데 정렬'] },
   { ver:'v3.8', date:'2026-10-29', tag:'change', items:['핸드폰·태블릿 화면 비율 대응 — 반응형 레이아웃 적용 (화면 폭 1180px / 900px / 700px 기준)', '상단 메뉴를 2단으로 배치하고 단지·주요일정·도움말 메뉴는 좌우 스와이프 가능', '단지별 취합 화면: 모바일에서 금주 진행사항 / 차주 예정사항을 위아래로 구분 표시', '작성 화면: 모바일·태블릿 세로에서 금주/차주 편집창을 위아래로 배치, 화면 높이 고정 해제로 잘림 방지', '주요 일정 달력: 모바일에서 칸 크기·글자 크기 축소, 도움말 목차 가로 스크롤, 팝업·사용자관리 창 화면 폭 맞춤'] },
     { ver:'v3.7', date:'2026-07-21', tag:'change',    items:['로그인 화면 "데모 모드로 보기" 버튼 삭제', '금주 진행사항 초기 입력항목(예정 문구) 삭제, 빈 상태로 시작', '금주 진행사항 입력창 안내문구를 "금주 진행 사항을 입력하세요"로 변경', '공종 탭·취합 화면의 완료/전체 건수 숫자 표시 삭제'] },
@@ -2591,6 +2644,7 @@ const HELP_SECTIONS = [
         <li class="help-li">사용자 목록에서 자물쇠 열림 아이콘(<i class="ti ti-lock-open" style="font-size:13px"></i>) 클릭</li>
         <li class="help-li">새 비밀번호(6자 이상)를 입력하고 [저장] 클릭</li>
         <li class="help-li">초기화 후 해당 사용자에게 새 비밀번호를 별도로 안내해주세요</li>
+        <li class="help-li">내부적으로 새 인증 계정이 발급되어 아이디에 연결되며, 이전 비밀번호로는 로그인할 수 없습니다</li>
       </ul>
       <h3 class="help-h3">사용자 삭제</h3>
       <ul class="help-ul"><li class="help-li">휴지통 아이콘 클릭 → 확인 팝업에서 [확인]</li></ul>
@@ -2729,8 +2783,51 @@ function helpSyncToc(){
 // ════════════════════════════════════════════════════════════
 // 사용자 관리
 // ════════════════════════════════════════════════════════════
-function openUP(){renderUList();document.getElementById('up-overlay').style.display='flex';}
+async function loadProfiles(){
+  const snap = await fbDB.ref(`${FB_ROOT}/profiles`).once('value');
+  const v = snap.val() || {};
+  PROFILES = Object.entries(v).map(([uid,p])=>Object.assign({uid},p))
+    .sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+}
+async function openUP(){
+  document.getElementById('up-overlay').style.display='flex';
+  document.getElementById('user-list').innerHTML='<div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div>';
+  try{ await loadProfiles(); }catch(e){ toast('사용자 목록 로드 실패: '+e.message); }
+  renderUList();
+  renderLegacyNotice();
+}
 function closeUP(){document.getElementById('up-overlay').style.display='none';}
+
+// 아직 Firebase Authentication 으로 전환되지 않은 기존 계정 안내 (보안 규칙 잠금 전 확인용)
+async function renderLegacyNotice(){
+  const el=document.getElementById('legacy-notice'); if(!el) return;
+  el.innerHTML='';
+  try{
+    const snap=await fbDB.ref(`${FB_ROOT}/users`).once('value');
+    const list=snap.val();
+    if(!Array.isArray(list)) return;
+    const pend=list.filter(x=>x&&x.pw&&!PROFILES.find(p=>p.id===x.id)).map(x=>x.id);
+    el.innerHTML = pend.length
+      ? `<div class="help-warn"><i class="ti ti-alert-triangle"></i><span>아직 인증 계정으로 전환되지 않은 사용자: <strong>${pend.join(', ')}</strong><br>해당 사용자가 기존 비밀번호로 한 번 로그인하면 자동 전환됩니다. 전환이 끝나기 전에 보안 규칙을 잠그면 로그인할 수 없습니다.</span></div>`
+      : `<div class="help-note"><i class="ti ti-circle-check"></i><span>모든 사용자가 인증 계정으로 전환되었습니다. 보안 규칙을 잠가도 됩니다.</span></div>`;
+  }catch(e){ /* 규칙 잠금 후에는 기존 users 노드를 읽을 수 없음 — 정상 */ }
+}
+
+// 보조 Firebase 앱 — 관리자 로그인 상태를 유지한 채 다른 사용자 인증 계정을 만들기 위해 사용
+let secApp=null;
+async function createAuthAccount(email,pw){
+  if(!secApp) secApp=firebase.initializeApp(firebaseConfig,'secondary');
+  const a=secApp.auth();
+  const c=await a.createUserWithEmailAndPassword(email,pw);
+  const uid=c.user.uid;
+  await a.signOut();
+  return uid;
+}
+function authErrMsg(e){
+  const m={'auth/weak-password':'비밀번호는 6자 이상이어야 합니다','auth/email-already-in-use':'이미 사용 중인 계정입니다','auth/network-request-failed':'네트워크 오류'};
+  return m[e.code]||(e.code||e.message);
+}
+
 async function resetPassword(userId, userName){
   showModal(`<h4><i class="ti ti-lock-open"></i>비밀번호 초기화</h4>
     <div class="fr">
@@ -2751,26 +2848,34 @@ async function resetPassword(userId, userName){
       if(!pw)       { toast('새 비밀번호를 입력하세요'); return false; }
       if(pw.length<6){ toast('6자 이상으로 입력하세요'); return false; }
       if(pw!==pw2)  { toast('비밀번호가 일치하지 않습니다'); return false; }
-      const users = getUserDB();
-      const u = users.find(x=>x.id===userId);
+      const u = PROFILES.find(x=>x.id===userId);
       if(!u){ toast('사용자를 찾을 수 없습니다'); return false; }
-      u.pw = btoa(pw);
-      await saveUserDB(users);
-      renderUList();
-      toast(`'${userName}' 비밀번호가 초기화되었습니다`);
+      try{
+        // 클라이언트에서는 타인의 비밀번호를 직접 바꿀 수 없으므로,
+        // 새 인증 계정을 발급해 아이디에 연결하고 이전 계정은 접근 불가 처리한다.
+        const email=resetEmail(userId);
+        const uid=await createAuthAccount(email,pw);
+        const up={};
+        up[`${FB_ROOT}/profiles/${uid}`]={id:u.id,name:u.name,role:u.role,site:u.site||''};
+        up[`${FB_ROOT}/usernames/${idHex(userId)}`]={email,uid};
+        up[`${FB_ROOT}/profiles/${u.uid}`]=null;
+        await fbDB.ref().update(up);
+        await loadProfiles(); renderUList();
+        toast(`'${userName}' 비밀번호가 초기화되었습니다`);
+      }catch(e){ toast('초기화 실패: '+authErrMsg(e)); return false; }
     });
 }
 
 function renderUList(){
   const RLBL={admin:'관리자',manager:'매니저',viewer:'조회자'};
   const RCLS={admin:'ra',manager:'rm',viewer:'rv'};
-  document.getElementById('user-list').innerHTML=getUserDB().map(u=>`
+  document.getElementById('user-list').innerHTML=PROFILES.map(u=>`
     <div class="urow">
       <div class="uav">${u.name.slice(0,2)}</div>
       <div style="flex:1"><div class="u-nm">${u.name} <span class="u-id">(${u.id})</span></div>
         <div style="font-size:13px;color:var(--tx3)">${u.site||'전체 현장'}</div></div>
       ${u.id!=='admin'
-        ?`<span class="u-role ${RCLS[u.role]||'rv'} u-role-edit" onclick="editUserRole('${u.id}','${u.name}','${u.role}')" title="권한 변경">${RLBL[u.role]||u.role}<i class="ti ti-chevron-down" style="font-size:11px;margin-left:2px"></i></span>`
+        ?`<span class="u-role ${RCLS[u.role]||'rv'} u-role-edit" onclick="editUserRole('${u.id}','${u.name}','${u.role}')" title="권한 변경">${RLBL[u.role]||u.role}<i class="ti ti-chevron-down" style="font-size:12px;margin-left:2px"></i></span>`
         :`<span class="u-role ${RCLS[u.role]||'rv'}">${RLBL[u.role]||u.role}</span>`}
       ${u.id!=='admin'?`<div class="u-act">
         <div class="u-reset" onclick="resetPassword('${u.id}','${u.name}')" title="비밀번호 초기화">
@@ -2799,11 +2904,11 @@ async function editUserRole(userId, userName, curRole){
     async()=>{
       const newRole = document.getElementById('m-role-select').value;
       if(newRole===curRole){ return; }
-      const users = getUserDB();
-      const u = users.find(x=>x.id===userId);
+      const u = PROFILES.find(x=>x.id===userId);
       if(!u){ toast('사용자를 찾을 수 없습니다'); return false; }
+      try{ await fbDB.ref(`${FB_ROOT}/profiles/${u.uid}/role`).set(newRole); }
+      catch(e){ toast('권한 변경 실패: '+e.message); return false; }
       u.role = newRole;
-      await saveUserDB(users);
       renderUList();
       toast(`'${userName}' 권한이 ${RLBL[newRole]}(으)로 변경되었습니다`);
     });
@@ -2815,17 +2920,34 @@ async function addUser(){
   const role=document.getElementById('nu-role').value;
   const site=document.getElementById('nu-site').value;
   if(!id||!pw||!name){toast('아이디·비밀번호·이름 필수');return;}
-  const users=getUserDB();
-  if(users.find(u=>u.id===id)){toast('이미 존재하는 아이디');return;}
-  users.push({id,pw:btoa(pw),name,role,site});
-  await saveUserDB(users); renderUList();
-  ['nu-id','nu-pw','nu-name'].forEach(x=>document.getElementById(x).value='');
-  toast(`'${name}' 추가 완료`);
+  if(pw.length<6){toast('비밀번호는 6자 이상');return;}
+  if(PROFILES.find(u=>u.id===id)){toast('이미 존재하는 아이디');return;}
+  try{
+    let email=defaultEmail(id), uid;
+    try{ uid=await createAuthAccount(email,pw); }
+    catch(e){
+      if(e.code==='auth/email-already-in-use'){ email=resetEmail(id); uid=await createAuthAccount(email,pw); }
+      else throw e;
+    }
+    const up={};
+    up[`${FB_ROOT}/profiles/${uid}`]={id,name,role,site};
+    up[`${FB_ROOT}/usernames/${idHex(id)}`]={email,uid};
+    await fbDB.ref().update(up);
+    await loadProfiles(); renderUList();
+    ['nu-id','nu-pw','nu-name'].forEach(x=>document.getElementById(x).value='');
+    toast(`'${name}' 추가 완료`);
+  }catch(e){ toast('사용자 추가 실패: '+authErrMsg(e)); }
 }
 async function delUser(id){
   if(!confirm('사용자를 삭제할까요?'))return;
-  await saveUserDB(getUserDB().filter(u=>u.id!==id));
-  renderUList(); toast('삭제 완료');
+  const u=PROFILES.find(x=>x.id===id); if(!u)return;
+  try{
+    const up={};
+    up[`${FB_ROOT}/profiles/${u.uid}`]=null;
+    up[`${FB_ROOT}/usernames/${idHex(id)}`]=null;
+    await fbDB.ref().update(up);
+    await loadProfiles(); renderUList(); toast('삭제 완료');
+  }catch(e){ toast('삭제 실패: '+e.message); }
 }
 async function changePw(){
   const cur=document.getElementById('pw-cur').value;
@@ -2834,10 +2956,17 @@ async function changePw(){
   if(!cur||!nw||!c2){toast('모든 항목 입력 필요');return;}
   if(nw!==c2){toast('새 비밀번호 불일치');return;}
   if(nw.length<6){toast('6자 이상');return;}
-  const users=getUserDB();
-  const u=users.find(x=>x.id===curUser.id);
-  if(!u||u.pw!==btoa(cur)){toast('현재 비밀번호 오류');return;}
-  u.pw=btoa(nw); await saveUserDB(users);
+  const user=fbAuth&&fbAuth.currentUser;
+  if(!user){toast('로그인 정보가 없습니다. 다시 로그인하세요');return;}
+  try{
+    const cred=firebase.auth.EmailAuthProvider.credential(user.email,cur);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(nw);
+  }catch(e){
+    if(['auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)) toast('현재 비밀번호 오류');
+    else toast('비밀번호 변경 실패: '+authErrMsg(e));
+    return;
+  }
   ['pw-cur','pw-new','pw-c2'].forEach(x=>document.getElementById(x).value='');
   toast('비밀번호 변경 완료');
 }

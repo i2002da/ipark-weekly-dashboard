@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "ipark_weekly_v1": {
+      "usernames": {
+        ".read": true,
+        "$id": { ".write": "auth != null && root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin'" }
+      },
+      "profiles": {
+        ".read": "auth != null && root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin'",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin'"
+        }
+      },
+      "sites": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin' || root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'manager')"
+      },
+      "categories": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin' || root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'manager')"
+      },
+      "calendar": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin' || root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'manager')"
+      },
+      "event_types": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'admin' || root.child('ipark_weekly_v1/profiles/'+auth.uid+'/role').val() === 'manager')"
+      }
+    }
+  }
+}
