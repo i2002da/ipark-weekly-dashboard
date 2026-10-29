@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.8</title>
+<title>천안IPC 주간업무현황 v3.8.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -571,6 +571,16 @@ img,table{max-width:100%}
 @media (max-width:900px) and (min-height:700px){
   .topbar{position:sticky;top:0}
 }
+
+/* ══ 태블릿(아이패드) 폭 제한 v3.8.1 ══ */
+@media (min-width:701px) and (max-width:1400px){
+  .topbar{padding-left:max(10px,calc((100vw - 980px)/2));padding-right:max(10px,calc((100vw - 980px)/2))}
+  .view{width:100%;max-width:980px;margin:0 auto;background:var(--bg)}
+  .ov-bar,.dv-bar,.cal-hdr,.ov-compare-hd,.gj-tabs{padding-left:14px;padding-right:14px}
+  #app{background:var(--bg2)}
+  .app-footer{max-width:980px;margin:0 auto}
+  .help-wrap{max-width:980px}
+}
 </style>
 </head>
 <body>
@@ -763,7 +773,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.8  2026-10-29  16:02';
+const VER = 'v3.8.1  2026-10-29  16:21';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2395,6 +2405,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.8.1', date:'2026-10-29', tag:'fix', items:['아이패드 등 태블릿에서 화면이 지나치게 넓게 보이던 문제 수정 — 본문 폭을 최대 980px로 제한하고 가운데 정렬'] },
   { ver:'v3.8', date:'2026-10-29', tag:'change', items:['핸드폰·태블릿 화면 비율 대응 — 반응형 레이아웃 적용 (화면 폭 1180px / 900px / 700px 기준)', '상단 메뉴를 2단으로 배치하고 단지·주요일정·도움말 메뉴는 좌우 스와이프 가능', '단지별 취합 화면: 모바일에서 금주 진행사항 / 차주 예정사항을 위아래로 구분 표시', '작성 화면: 모바일·태블릿 세로에서 금주/차주 편집창을 위아래로 배치, 화면 높이 고정 해제로 잘림 방지', '주요 일정 달력: 모바일에서 칸 크기·글자 크기 축소, 도움말 목차 가로 스크롤, 팝업·사용자관리 창 화면 폭 맞춤'] },
     { ver:'v3.7', date:'2026-07-21', tag:'change',    items:['로그인 화면 "데모 모드로 보기" 버튼 삭제', '금주 진행사항 초기 입력항목(예정 문구) 삭제, 빈 상태로 시작', '금주 진행사항 입력창 안내문구를 "금주 진행 사항을 입력하세요"로 변경', '공종 탭·취합 화면의 완료/전체 건수 숫자 표시 삭제'] },
     { ver:'v3.6', date:'2026-07-12', tag:'change',    items:['캘린더 날짜 칸에 표시되는 일정 개수 2건 → 4건으로 확대', '5건 이상일 때만 "+N건"으로 표시 (기존 3건 이상에서 완화)', '일정 4개를 담을 수 있도록 날짜 칸 높이 확장', '"+N건" 표시를 파란색·굵은 글씨로 강조해 클릭 유도'] },
