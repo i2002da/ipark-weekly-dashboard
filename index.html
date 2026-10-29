@@ -7,9 +7,9 @@
 // 아이패드 등 태블릿: viewport 폭을 줄여 화면 전체를 TABLET_SCALE 배 확대해 보이게 한다 (v3.11~)
 // MIN_W 를 704 로 두면 세로 화면에서 금주/차주 2열 대비를 유지(그만큼 덜 확대됨)
 // PC 브라우저는 viewport 메타를 무시하므로 영향 없음, 폰(짧은 변 700 미만)은 제외
-// 2배 확대(v3.12) — 폭이 700px 이하가 되어 핸드폰과 같은 레이아웃(금주/차주 위아래 배치)으로 표시됨
+// 1.5배 확대(v3.15) — 아이패드 가로는 태블릿 레이아웃(금주/차주 2열), 세로는 핸드폰 레이아웃으로 표시됨
 (function(){
-  var TABLET_SCALE=2, MIN_W=0;
+  var TABLET_SCALE=1.5, MIN_W=0;
   var s=Math.min(screen.width,screen.height), l=Math.max(screen.width,screen.height);
   if(!(navigator.maxTouchPoints>1 && s>=700 && s<=1100)) return;
   var m=document.querySelector('meta[name=viewport]');
@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.14</title>
+<title>천안IPC 주간업무현황 v3.15</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -160,10 +160,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .ov-write-btn{height:44px;padding:0 18px;border:none;border-radius:10px;background:#F5B83D;color:#0F1B2D;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
 .ov-write-btn:hover{background:#FFC95C}
 .ov-band-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.ov-wk-nav{display:flex;gap:4px}
+.ov-wk-nav{display:flex;flex-wrap:wrap;gap:4px;max-width:100%}
 .ov-wk-btn{height:44px;padding:0 14px;border:1px solid #33445C;border-radius:10px;background:transparent;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px}
 .ov-wk-btn:hover{background:#1F3352;border-color:#4A6488}
 .ov-wk-btn.cur{background:#1F3352;border-color:#9CC3FF}
+.ov-wk-sel{height:44px;padding:0 34px 0 12px;border:1px solid #33445C;border-radius:10px;background:#16253B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:100%}
+.ov-wk-sel option{color:#17202C;background:#fff}
 .ov-wk-past{font-size:12px;font-weight:700;background:#F5B83D;color:#0F1B2D;border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:3px}
 .ov-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .ov-tile{background:#16253B;border:1px solid #26374F;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;color:#fff;text-align:left;font-family:inherit;min-height:44px}
@@ -193,6 +195,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 @media (max-width:700px){
   .ov-band-in{padding:14px 12px 16px;gap:12px}
   .ov-band-title{font-size:20px}
+  .ov-band-act,.ov-wk-nav{width:100%}
+  .ov-wk-sel{flex:1 1 150px;min-width:0;font-size:14px;padding:0 26px 0 10px;background-position:right 9px center}
+  .ov-wk-btn{padding:0 11px}
   .ov-tiles{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
   .ov-main{padding:12px;gap:12px}
 }
@@ -720,9 +725,10 @@ img,table{max-width:100%}
           </div>
           <div class="ov-band-act">
             <div class="ov-wk-nav" role="group" aria-label="주차 이동">
-              <button type="button" class="ov-wk-btn" onclick="chgWeek(-1)"><i class="ti ti-chevron-left" aria-hidden="true"></i>지난주</button>
+              <button type="button" class="ov-wk-btn" onclick="chgWeek(-1)" aria-label="지난주"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+              <select class="ov-wk-sel" id="ov-wk-sel" aria-label="주차 선택" onchange="pickWeek(this.value)"></select>
+              <button type="button" class="ov-wk-btn" onclick="chgWeek(1)" aria-label="다음주"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
               <button type="button" class="ov-wk-btn" id="ov-wk-now" onclick="goToThisWeek()">이번 주</button>
-              <button type="button" class="ov-wk-btn" onclick="chgWeek(1)">다음주<i class="ti ti-chevron-right" aria-hidden="true"></i></button>
             </div>
             <button type="button" class="ov-write-btn" id="ov-write-btn" onclick="openDetail(curOvSite)"><i class="ti ti-edit" aria-hidden="true"></i>업무 작성</button>
           </div>
@@ -872,7 +878,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.14  2026-10-30  08:51';
+const VER = 'v3.15  2026-10-30  08:56';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1036,9 +1042,9 @@ function calcWeek(baseDate){
   const wk=Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
   const mon=new Date(d);mon.setDate(d.getDate()-d.getDay()+1); // 월요일
   const fri=new Date(mon);fri.setDate(mon.getDate()+4);        // 금요일
-  return{year:yr,week:wk,label:`${wk}주차`,
-         from:mon.toISOString().slice(0,10),
-         to:fri.toISOString().slice(0,10)};
+  // 로컬 날짜로 변환 (toISOString 은 UTC 라 한국 시간 오전 9시 전에는 하루 전 날짜가 됨)
+  const ymd=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+  return{year:yr,week:wk,label:`${wk}주차`,from:ymd(mon),to:ymd(fri)};
 }
 let WEEK = calcWeek(new Date());
 
@@ -1664,9 +1670,9 @@ async function renderOvBand(){
   const wk=document.getElementById('ov-band-wk');
   // 이번 주가 아니면 '지난 기록'/'다음 주' 표시, [이번 주] 버튼은 이번 주일 때 강조
   const thisWk=calcWeek(new Date()), diff=Math.round((new Date(WEEK.from)-new Date(thisWk.from))/864e5/7);
-  if(wk) wk.innerHTML=`${WEEK.label} · ${fd(WEEK.from)} – ${fd(WEEK.to)}`
-    +(diff<0?`<span class="ov-wk-past">${-diff}주 전</span>`:diff>0?`<span class="ov-wk-past">${diff}주 후</span>`:'');
+  if(wk) wk.innerHTML=diff<0?`<span class="ov-wk-past">${-diff}주 전</span>`:diff>0?`<span class="ov-wk-past">${diff}주 후</span>`:'';
   document.getElementById('ov-wk-now')?.classList.toggle('cur',diff===0);
+  renderWeekSelect(thisWk);
   const wb=document.getElementById('ov-write-btn');
   if(wb) wb.style.display=canEdit()?'':'none';
   const el=document.getElementById('ov-tiles'); if(!el) return;
@@ -1675,6 +1681,24 @@ async function renderOvBand(){
       <span class="ov-tile-top"><span class="ov-tile-nm">${x.site}</span><span class="ov-tile-st ${x.written?'done':'none'}">${x.written?'작성':'미작성'}</span></span>
       <span class="ov-tile-cnt">금주 ${x.cur}건 · 차주 ${x.nxt}건</span>
     </button>`).join('');
+}
+// 주차 선택 드롭다운 — 이번 주 기준 지난 52주 ~ 다음 4주, "44주차 10.26~10.30" 형식 (다른 해는 연도 표시)
+function renderWeekSelect(thisWk){
+  const sel=document.getElementById('ov-wk-sel'); if(!sel) return;
+  const wkTxt=w=>`${w.year!==thisWk.year?w.year+'년 ':''}${w.label} ${fd(w.from)}~${fd(w.to)}`;
+  const opts=[];
+  for(let i=4;i>=-52;i--){
+    const d=new Date(thisWk.from+'T00:00:00'); d.setDate(d.getDate()+i*7);
+    opts.push(calcWeek(d));
+  }
+  if(!opts.some(w=>w.from===WEEK.from)) opts.push(WEEK);
+  sel.innerHTML=opts.map(w=>`<option value="${w.from}"${w.from===WEEK.from?' selected':''}>${wkTxt(w)}${w.from===thisWk.from?' (이번 주)':''}</option>`).join('');
+}
+function pickWeek(from){
+  WEEK=calcWeek(new Date(from+'T00:00:00'));
+  dataCache={};etagCache={};
+  updateWeekLabel();
+  refreshCurrentView();
 }
 function renderOvEvents(){
   const el=document.getElementById('ov-ev-list'); if(!el) return;
@@ -2609,6 +2633,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.15', date:'2026-10-30', tag:'change', items:['현황판에 주차 선택 드롭다운 추가 — "44주차 10.26~10.30" 형식으로 지난 52주 ~ 다음 4주 중 선택', '아이패드 화면 확대 배율을 2배에서 1.5배로 조정해 한 화면에 더 넓게 표시(가로 화면은 금주/차주 2열)', '오전 9시 이전에 주차 날짜가 하루 앞당겨 표시되던 문제 수정(예: 10.25~10.29 → 10.26~10.30)'] },
   { ver:'v3.14', date:'2026-10-30', tag:'new', items:['현황판 상단에 [지난주]·[이번 주]·[다음주] 버튼 추가 — 메인 화면에서 다른 주차의 현황보고를 바로 조회', '이번 주가 아닌 주차를 볼 때 제목 옆에 "n주 전"·"n주 후" 표시'] },
   { ver:'v3.13', date:'2026-10-30', tag:'change', items:['단지별 취합 화면 디자인 변경(현장 관제형) — 상단에 6개 단지 현황 타일(작성 여부, 금주·차주 항목 수) 표시, 타일을 누르면 해당 단지로 이동', '금주/차주 대비를 카드 형태로 정리하고 마지막 수정 시각·작성자 표시', '오른쪽에 이번 주 주요 일정(월~일) 목록 추가 — 일정을 누르면 수정, [달력 전체 보기]로 이동', '[업무 작성] 버튼 추가(작성 권한이 있는 사용자만 표시)'] },
   { ver:'v3.12', date:'2026-10-30', tag:'change', items:['아이패드 등 태블릿 화면 확대 배율을 2배로 변경 — 핸드폰과 같은 배치(금주/차주 위아래)로 크게 표시', 'PC·핸드폰 화면은 변경 없음'] },
