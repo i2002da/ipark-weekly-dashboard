@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.12</title>
+<title>천안IPC 주간업무현황 v3.13</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -149,6 +149,47 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .ov-gj-body .by{background:var(--amber-bg);color:var(--amber-tx);font-size:12px;padding:1px 5px;border-radius:99px}
 .ov-gj-body .bw{background:var(--red-bg);color:var(--red-tx);font-size:12px;padding:1px 5px;border-radius:99px}
 .ov-empty{font-size:14px;color:var(--tx3);font-style:italic}
+
+/* ── 현장 관제형 v3.13: 상단 현황 띠 + 대비 카드 + 이번 주 일정 ── */
+.ov-band{background:#0F1B2D;color:#fff}
+.ov-band-in{max-width:1200px;margin:0 auto;padding:18px 20px 20px;display:flex;flex-direction:column;gap:16px}
+.ov-band-hd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.ov-band-co{font-size:13px;color:#A8B4C4}
+.ov-band-title{font-size:24px;font-weight:800;line-height:1.3}
+.ov-band-title span{font-size:15px;font-weight:500;color:#A8B4C4;margin-left:8px}
+.ov-write-btn{height:44px;padding:0 18px;border:none;border-radius:10px;background:#F5B83D;color:#0F1B2D;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
+.ov-write-btn:hover{background:#FFC95C}
+.ov-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.ov-tile{background:#16253B;border:1px solid #26374F;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;color:#fff;text-align:left;font-family:inherit;min-height:44px}
+.ov-tile:hover{border-color:#4A6488}
+.ov-tile.on{background:#1F3352;border-color:#9CC3FF}
+.ov-tile-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ov-tile-nm{font-size:16px;font-weight:700}
+.ov-tile-st{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.ov-tile-st.done{background:#1E6B47;color:#D7F5E4}
+.ov-tile-st.none{background:#7A2E12;color:#FFE1D2}
+.ov-tile-cnt{font-size:13px;color:#C5CFDC}
+.ov-main{max-width:1200px;width:100%;margin:0 auto;padding:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.ov-board{flex:999 1 560px;min-width:0;background:var(--bg2);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.ov-board .ov-bar{height:auto;min-height:52px}
+.ov-board .ov-body{overflow:visible}
+.ov-upd{font-size:13px;color:var(--tx2)}
+.ov-events{flex:1 1 280px;background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.ov-ev-title{font-size:17px;font-weight:800}
+.ov-ev{display:flex;gap:12px;align-items:flex-start;padding-top:10px;border-top:1px solid var(--bd);cursor:pointer}
+.ov-ev-d{flex:none;width:44px;text-align:center;line-height:1.2}
+.ov-ev-d b{display:block;font-size:18px;font-weight:800}
+.ov-ev-d span{font-size:12px;color:var(--tx2)}
+.ov-ev-meta{font-size:12px;font-weight:700}
+.ov-ev-t{font-size:15px;line-height:1.45}
+.ov-ev-more{font-size:14px;font-weight:700;color:var(--blue);text-decoration:none;padding-top:4px}
+.ov-ev-empty{font-size:14px;color:var(--tx3);padding-top:4px}
+@media (max-width:700px){
+  .ov-band-in{padding:14px 12px 16px;gap:12px}
+  .ov-band-title{font-size:20px}
+  .ov-tiles{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+  .ov-main{padding:12px;gap:12px}
+}
 
 /* ── 롤업 ── */
 .rollup{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
@@ -664,18 +705,40 @@ img,table{max-width:100%}
 
   <!-- 단지별 취합 화면 -->
   <div class="view active" id="view-overview">
-    <div class="ov-bar">
-      <span class="ov-site-name" id="ov-site-name">3단지</span>
-      <div class="ov-bar-r">
-        <div class="icon-btn" id="ov-edit-btn" onclick="openDetail(curOvSite)" title="편집 화면으로 이동">
-          <i class="ti ti-edit"></i></div>
+    <section class="ov-band" aria-label="단지별 작성 현황">
+      <div class="ov-band-in">
+        <div class="ov-band-hd">
+          <div>
+            <div class="ov-band-co">HDC현대산업개발 · 천안IPC 통합현장</div>
+            <h1 class="ov-band-title">주간업무 현황판<span id="ov-band-wk"></span></h1>
+          </div>
+          <button type="button" class="ov-write-btn" id="ov-write-btn" onclick="openDetail(curOvSite)"><i class="ti ti-edit" aria-hidden="true"></i>업무 작성</button>
+        </div>
+        <div class="ov-tiles" id="ov-tiles"></div>
       </div>
+    </section>
+    <div class="ov-main">
+      <section class="ov-board" aria-label="금주 차주 대비">
+        <div class="ov-bar">
+          <span class="ov-site-name" id="ov-site-name">3단지</span>
+          <div class="ov-bar-r">
+            <span class="ov-upd" id="ov-upd"></span>
+            <div class="icon-btn" id="ov-edit-btn" onclick="openDetail(curOvSite)" title="편집 화면으로 이동">
+              <i class="ti ti-edit"></i></div>
+          </div>
+        </div>
+        <div class="ov-compare-hd">
+          <div class="ov-col-hd"><i class="ti ti-hammer" aria-hidden="true"></i>금주 진행사항</div>
+          <div class="ov-col-hd"><i class="ti ti-calendar-event" aria-hidden="true"></i>차주 예정사항</div>
+        </div>
+        <div class="ov-body" id="ov-body"><div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div></div>
+      </section>
+      <aside class="ov-events" aria-label="이번 주 주요 일정">
+        <h2 class="ov-ev-title">이번 주 주요 일정</h2>
+        <div id="ov-ev-list"></div>
+        <a class="ov-ev-more" href="#" onclick="showView('cal',document.getElementById('nav-cal'));return false">달력 전체 보기 →</a>
+      </aside>
     </div>
-    <div class="ov-compare-hd">
-      <div class="ov-col-hd"><i class="ti ti-hammer" aria-hidden="true"></i>금주 진행사항</div>
-      <div class="ov-col-hd"><i class="ti ti-calendar-event" aria-hidden="true"></i>차주 예정사항</div>
-    </div>
-    <div class="ov-body" id="ov-body"><div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div></div>
   </div>
 
   <!-- 상세 -->
@@ -796,7 +859,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.12  2026-10-30  08:04';
+const VER = 'v3.13  2026-10-30  08:47';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -926,6 +989,7 @@ async function loadCalEventsFromFirebase(){
       calEventsLoaded = true;
       if(first){ first=false; resolve(); }
       else if(document.getElementById('view-cal')?.classList.contains('active')) renderCal();
+      else if(document.getElementById('view-overview')?.classList.contains('active')) renderOvEvents();
     }, err=>{
       console.warn('일정 로드 실패', err);
       calEvents=[]; calEventsLoaded=true;
@@ -1530,6 +1594,7 @@ async function refreshCurrentView(){
   if(detailActive&&curSite){
     await openDetail(curSite);
   } else if(homeActive&&curOvSite){
+    renderOvBand(); renderOvEvents();
     const data=await fetchSiteData(curOvSite);
     renderOverview(curOvSite,data);
   }
@@ -1565,8 +1630,48 @@ async function openSiteOverview(site,navEl){
   document.getElementById('ov-site-name').textContent=site;
   const body=document.getElementById('ov-body');
   body.innerHTML='<div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div>';
+  renderOvBand();
+  renderOvEvents();
   const data=await fetchSiteData(site);
   renderOverview(site,data);
+}
+
+// ── 현장 관제형 상단 현황 띠·이번 주 일정 (v3.13) ──
+function mdItemCount(md){ return (md||'').split('\n').filter(l=>/^\s*[-*] /.test(l)).length; }
+function siteSummary(site,data){
+  let cur=0,nxt=0,written=false;
+  getCats(site).forEach(c=>{
+    const g=data?.gongjong?.[c]||{};
+    cur+=mdItemCount(g.current_md); nxt+=mdItemCount(g.next_md);
+    if((g.current_md||'').trim()||(g.next_md||'').trim()) written=true;
+  });
+  return {cur,nxt,written};
+}
+async function renderOvBand(){
+  const wk=document.getElementById('ov-band-wk');
+  if(wk) wk.textContent=`${WEEK.label} · ${fd(WEEK.from)} – ${fd(WEEK.to)}`;
+  const wb=document.getElementById('ov-write-btn');
+  if(wb) wb.style.display=canEdit()?'':'none';
+  const el=document.getElementById('ov-tiles'); if(!el) return;
+  const list=await Promise.all(SITES.map(async s=>Object.assign({site:s},siteSummary(s,await fetchSiteData(s)))));
+  el.innerHTML=list.map(x=>`<button type="button" class="ov-tile${x.site===curOvSite?' on':''}" onclick="openSiteOverview('${x.site}',document.getElementById('nav-site-${x.site.replace(/ /g,'_')}'))">
+      <span class="ov-tile-top"><span class="ov-tile-nm">${x.site}</span><span class="ov-tile-st ${x.written?'done':'none'}">${x.written?'작성':'미작성'}</span></span>
+      <span class="ov-tile-cnt">금주 ${x.cur}건 · 차주 ${x.nxt}건</span>
+    </button>`).join('');
+}
+function renderOvEvents(){
+  const el=document.getElementById('ov-ev-list'); if(!el) return;
+  const iso=d=>{const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;};
+  const sun=new Date(WEEK.from); sun.setDate(sun.getDate()+6);  // 주말 일정까지 포함(월~일)
+  const from=iso(WEEK.from), to=iso(sun), DOW='일월화수목금토';
+  const evs=calEvents.filter(e=>e.date>=from&&e.date<=to).sort((a,b)=>a.date.localeCompare(b.date));
+  el.innerHTML=evs.length?evs.map(e=>{
+    const st=siteEvStyle(e.site_code), d=new Date(e.date+'T00:00:00');
+    return `<div class="ov-ev" onclick="openEditEvent('${e.id}')">
+      <div class="ov-ev-d"><b>${d.getDate()}</b><span>${DOW[d.getDay()]}</span></div>
+      <div><div class="ov-ev-meta" style="color:${st.fg}">${e.site_code} · ${e.event_type}</div><div class="ov-ev-t">${e.title}</div></div>
+    </div>`;
+  }).join(''):'<div class="ov-ev-empty">이번 주 등록된 일정이 없습니다</div>';
 }
 
 function stripFirstHeading(html){
@@ -1576,6 +1681,11 @@ function stripFirstHeading(html){
 function renderOverview(site,data){
   const cats=getCats(site);
   const body=document.getElementById('ov-body');
+  const upd=document.getElementById('ov-upd');
+  if(upd){
+    const t=data.updated_at?new Date(data.updated_at):null;
+    upd.textContent=t?`마지막 수정 ${fd(t)} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}${data.updated_by?' · '+data.updated_by:''}`:'';
+  }
   body.innerHTML=cats.map(c=>{
     const curMd=(data.gongjong?.[c]?.current_md||'').trim();
     const nxtMd=(data.gongjong?.[c]?.next_md||'').trim();
@@ -2482,6 +2592,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.13', date:'2026-10-30', tag:'change', items:['단지별 취합 화면 디자인 변경(현장 관제형) — 상단에 6개 단지 현황 타일(작성 여부, 금주·차주 항목 수) 표시, 타일을 누르면 해당 단지로 이동', '금주/차주 대비를 카드 형태로 정리하고 마지막 수정 시각·작성자 표시', '오른쪽에 이번 주 주요 일정(월~일) 목록 추가 — 일정을 누르면 수정, [달력 전체 보기]로 이동', '[업무 작성] 버튼 추가(작성 권한이 있는 사용자만 표시)'] },
   { ver:'v3.12', date:'2026-10-30', tag:'change', items:['아이패드 등 태블릿 화면 확대 배율을 2배로 변경 — 핸드폰과 같은 배치(금주/차주 위아래)로 크게 표시', 'PC·핸드폰 화면은 변경 없음'] },
   { ver:'v3.11', date:'2026-10-30', tag:'fix', items:['아이패드 등 태블릿에서 글씨가 너무 작게 보이던 문제 개선 — 화면 전체를 가로 약 1.2배, 세로 약 1.17배(금주/차주 2열 유지) 확대 표시', 'PC·핸드폰 화면은 변경 없음'] },
   { ver:'v3.10', date:'2026-10-29', tag:'new', items:['사용자 관리에 [인사정보 엑셀로 일괄 등록] 추가 — 조건별인사정보 엑셀을 선택하면 사번을 아이디로 한꺼번에 등록(공무 담당은 관리자, 그 외 매니저, 담당 현장은 본 소속 부서 기준)', '일괄 등록 초기 비밀번호는 사번(4자리 사번은 두 번 이어 씀), 초기 비밀번호로 로그인하면 새 비밀번호로 바꾸기 전까지 사용할 수 없도록 변경 창 표시'] },
