@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.9</title>
+<title>천안IPC 주간업무현황 v3.10</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -755,6 +755,9 @@ img,table{max-width:100%}
         </div>
         <button class="up-add-btn" onclick="addUser()">
           <i class="ti ti-plus" style="font-size:16px;vertical-align:-1px;margin-right:3px"></i>추가</button>
+        <button class="up-add-btn" style="margin-top:6px;background:var(--bg2);color:var(--blue);border:1px solid var(--blue)" onclick="document.getElementById('bulk-file').click()">
+          <i class="ti ti-file-spreadsheet" style="font-size:16px;vertical-align:-1px;margin-right:3px"></i>인사정보 엑셀로 일괄 등록</button>
+        <input type="file" id="bulk-file" accept=".xlsx,.xls" style="display:none" onchange="bulkFromExcel(this)">
       </div>
       <div class="up-sec" style="margin-top:6px">비밀번호 변경</div>
       <div class="pw-form">
@@ -775,7 +778,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.9  2026-10-29  16:31';
+const VER = 'v3.10  2026-10-29  17:24';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1159,6 +1162,9 @@ function idHex(id){
 }
 function defaultEmail(id){ return 'u'+idHex(id)+AUTH_SUFFIX; }
 function resetEmail(id){ return 'u'+idHex(id)+'r'+Date.now().toString(36)+AUTH_SUFFIX; }
+// 일괄 등록 초기 비밀번호 = 사번 (6자 미만이면 사번을 두 번 이어 씀 — Firebase 최소 6자)
+// 이 비밀번호로 로그인하면 비밀번호 변경 창이 뜬다
+function initialPw(id){ return id.length>=6 ? id : id+id; }
 
 async function resolveEmail(id){
   try{
@@ -1275,6 +1281,7 @@ async function doLogin(){
       return;
     }
     await enterApp(prof);
+    if(pw===initialPw(id)) forcePwChange();
   }catch(e){
     console.error('로그인 오류',e);
     if(e.code==='auth/network-request-failed') loginConnError(err);
@@ -2457,6 +2464,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.10', date:'2026-10-29', tag:'new', items:['사용자 관리에 [인사정보 엑셀로 일괄 등록] 추가 — 조건별인사정보 엑셀을 선택하면 사번을 아이디로 한꺼번에 등록(공무 담당은 관리자, 그 외 매니저, 담당 현장은 본 소속 부서 기준)', '일괄 등록 초기 비밀번호는 사번(4자리 사번은 두 번 이어 씀), 초기 비밀번호로 로그인하면 새 비밀번호로 바꾸기 전까지 사용할 수 없도록 변경 창 표시'] },
   { ver:'v3.9', date:'2026-10-29', tag:'new', items:['보안 강화 — Firebase Authentication(이메일/비밀번호) 기반 로그인으로 전환, 비밀번호를 DB에 저장하지 않음', '기존 계정은 처음 로그인하는 순간 기존 비밀번호 그대로 자동 전환되며, DB의 기존 비밀번호는 삭제됨', '사용자 정보(이름·권한)는 인증 계정(uid)별로 저장 — 관리자 사용자 관리 화면에 미전환 사용자 안내 표시', '비밀번호 초기화는 새 인증 계정을 발급해 아이디에 연결하는 방식으로 변경, 본인 비밀번호 변경은 현재 비밀번호 재인증 후 처리', '사용자 관리 창에서 팝업(권한 변경·비밀번호 초기화)이 뒤에 가려지던 문제 수정'] },
   { ver:'v3.8.1', date:'2026-10-29', tag:'fix', items:['아이패드 등 태블릿에서 화면이 지나치게 넓게 보이던 문제 수정 — 본문 폭을 최대 980px로 제한하고 가운데 정렬'] },
   { ver:'v3.8', date:'2026-10-29', tag:'change', items:['핸드폰·태블릿 화면 비율 대응 — 반응형 레이아웃 적용 (화면 폭 1180px / 900px / 700px 기준)', '상단 메뉴를 2단으로 배치하고 단지·주요일정·도움말 메뉴는 좌우 스와이프 가능', '단지별 취합 화면: 모바일에서 금주 진행사항 / 차주 예정사항을 위아래로 구분 표시', '작성 화면: 모바일·태블릿 세로에서 금주/차주 편집창을 위아래로 배치, 화면 높이 고정 해제로 잘림 방지', '주요 일정 달력: 모바일에서 칸 크기·글자 크기 축소, 도움말 목차 가로 스크롤, 팝업·사용자관리 창 화면 폭 맞춤'] },
@@ -2633,6 +2641,13 @@ const HELP_SECTIONS = [
       <p class="help-p">관리자 계정으로 로그인하면 우측 상단 <span class="help-kbd"><i class="ti ti-users" style="font-size:12px"></i></span> 아이콘으로 사용자 관리 패널을 열 수 있습니다.</p>
       <h3 class="help-h3">사용자 추가</h3>
       <ul class="help-ul"><li class="help-li">[새 사용자 추가] 섹션에서 아이디·비밀번호·이름·권한·담당 현장 입력 후 [추가] 클릭</li></ul>
+      <h3 class="help-h3">인사정보 엑셀로 일괄 등록</h3>
+      <ul class="help-ul">
+        <li class="help-li">[인사정보 엑셀로 일괄 등록] 클릭 → iConnect 조건별인사정보 엑셀(.xlsx) 선택 → 등록 대상 확인 후 [등록]</li>
+        <li class="help-li">아이디는 사번, 초기 비밀번호도 사번입니다 (4자리 사번은 두 번 이어 씀, 예: 1234 → 12341234)</li>
+        <li class="help-li">세부직책·담당업무에 '공무'가 있으면 관리자, 그 외는 매니저 / 담당 현장은 (겸)이 아닌 본 소속 부서 기준(통합현장은 전체)</li>
+        <li class="help-li">이미 등록된 사번은 건너뜁니다. 초기 비밀번호로 로그인하면 새 비밀번호로 변경해야 사용할 수 있습니다</li>
+      </ul>
       <h3 class="help-h3">권한 변경</h3>
       <ul class="help-ul">
         <li class="help-li">사용자 목록에서 권한 배지(관리자·매니저·조회자)를 클릭</li>
@@ -2913,6 +2928,124 @@ async function editUserRole(userId, userName, curRole){
       toast(`'${userName}' 권한이 ${RLBL[newRole]}(으)로 변경되었습니다`);
     });
 }
+// 인증 계정 발급 + profiles/usernames 기록 (사용자 추가·일괄 등록 공용)
+async function registerUser(id,name,role,site,pw){
+  let email=defaultEmail(id), uid;
+  try{ uid=await createAuthAccount(email,pw); }
+  catch(e){
+    if(e.code==='auth/email-already-in-use'){ email=resetEmail(id); uid=await createAuthAccount(email,pw); }
+    else throw e;
+  }
+  const up={};
+  up[`${FB_ROOT}/profiles/${uid}`]={id,name,role,site};
+  up[`${FB_ROOT}/usernames/${idHex(id)}`]={email,uid};
+  await fbDB.ref().update(up);
+}
+
+// ── 인사정보(조건별인사정보) 엑셀 일괄 등록 ──
+// 아이디·초기 비밀번호 = 사번, 세부직책/담당업무에 '공무'가 있으면 관리자 그 외 매니저,
+// 담당 현장은 (겸)이 아닌 본 소속 부서 기준. 엑셀 내용은 브라우저에서만 읽고 저장소에 남기지 않는다.
+function loadXLSXLib(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=res; s.onerror=()=>rej(new Error('엑셀 라이브러리 로드 실패'));
+    document.head.appendChild(s);
+  });
+}
+function deptToSite(dept){
+  const d=String(dept||'').replace(/^\(겸\)/,'');
+  const m=d.match(/(\d)단지/); if(m) return m[1]+'단지';
+  if(/부지조성/.test(d)) return '기반시설';
+  if(/DX/i.test(d)) return 'DX TFT';
+  return '';  // 통합현장 등 → 전체
+}
+function parseHRRows(rows){
+  const hi=rows.findIndex(r=>r.includes('사번')&&r.includes('성명')&&r.includes('부서'));
+  if(hi<0) throw new Error('사번·성명·부서 열을 찾을 수 없습니다');
+  const H=rows[hi], c=k=>H.indexOf(k);
+  const iId=c('사번'), iNm=c('성명'), iDp=c('부서'), iJob=c('세부직책'), iTask=c('담당업무');
+  const map=new Map();
+  rows.slice(hi+1).forEach(r=>{
+    const id=String(r[iId]||'').trim(), name=String(r[iNm]||'').trim();
+    if(!/^\d+$/.test(id)||!name) return;
+    const dept=String(r[iDp]||'').trim();
+    const gongmu=/공무/.test(String(iJob>=0?r[iJob]:'')+' '+String(iTask>=0?r[iTask]:''));
+    let p=map.get(id);
+    if(!p){ p={id,name,depts:[],gongmu:false}; map.set(id,p); }
+    p.depts.push(dept); p.gongmu=p.gongmu||gongmu;
+  });
+  return [...map.values()].map(p=>{
+    const main=p.depts.find(d=>!d.startsWith('(겸)'))||p.depts[0];
+    return {id:p.id,name:p.name,role:p.gongmu?'admin':'manager',site:deptToSite(main),dept:main};
+  });
+}
+async function bulkFromExcel(input){
+  const file=input.files[0]; input.value='';
+  if(!file) return;
+  let list;
+  try{
+    await loadXLSXLib();
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+    list=parseHRRows(rows);
+  }catch(e){ toast('엑셀 읽기 실패: '+e.message); return; }
+  const fresh=list.filter(u=>!PROFILES.find(p=>p.id===u.id));
+  const skip=list.length-fresh.length;
+  if(!fresh.length){ toast(`새로 등록할 사용자가 없습니다 (이미 등록 ${skip}명)`); return; }
+  const RLBL={admin:'관리자',manager:'매니저'};
+  showModal(`<h4><i class="ti ti-file-spreadsheet"></i>인사정보 일괄 등록</h4>
+    <div class="help-note"><i class="ti ti-info-circle"></i><span>신규 <strong>${fresh.length}명</strong> 등록${skip?` · 이미 등록된 ${skip}명 제외`:''}<br>
+      아이디·초기 비밀번호는 사번입니다 (4자리 사번은 사번을 두 번, 예: 1234 → 12341234). 첫 로그인 때 비밀번호 변경 창이 뜹니다.</span></div>
+    <div style="max-height:45vh;overflow-y:auto;font-size:13px;border:0.5px solid var(--bd);border-radius:var(--r)">
+      <table style="width:100%;border-collapse:collapse">
+        <tr style="position:sticky;top:0;background:var(--bg3)"><th style="padding:4px">사번</th><th>성명</th><th>권한</th><th>담당 현장</th></tr>
+        ${fresh.map(u=>`<tr style="border-top:0.5px solid var(--bd)"><td style="padding:3px 6px">${u.id}</td><td>${u.name}</td>
+          <td${u.role==='admin'?' style="color:var(--blue);font-weight:700"':''}>${RLBL[u.role]}</td><td title="${u.dept}">${u.site||'전체'}</td></tr>`).join('')}
+      </table>
+    </div>`,
+    async()=>{
+      const btn=document.getElementById('ms-btn'); btn.disabled=true;
+      const fail=[];
+      for(let i=0;i<fresh.length;i++){
+        const u=fresh[i];
+        btn.textContent=`등록 중 ${i+1}/${fresh.length}`;
+        try{ await registerUser(u.id,u.name,u.role,u.site,initialPw(u.id)); }
+        catch(e){ fail.push(`${u.name}(${u.id}): ${authErrMsg(e)}`); }
+      }
+      await loadProfiles(); renderUList();
+      toast(`일괄 등록 완료 — 성공 ${fresh.length-fail.length}명${fail.length?`, 실패 ${fail.length}명`:''}`);
+      if(fail.length) alert('등록 실패 목록\n\n'+fail.join('\n'));
+    });
+  document.querySelector('#modal-root .modal').style.width='520px';
+  document.getElementById('ms-btn').textContent='등록';
+}
+
+// 초기 비밀번호(사번)로 로그인한 경우 — 새 비밀번호로 바꾸기 전에는 닫을 수 없는 창
+function forcePwChange(){
+  document.getElementById('modal-root').innerHTML=
+    `<div class="modal-bg"><div class="modal">
+      <h4><i class="ti ti-lock"></i>비밀번호 변경 필요</h4>
+      <div class="help-note"><i class="ti ti-info-circle"></i><span>초기 비밀번호(사번)로 로그인했습니다.<br>새 비밀번호로 변경한 뒤 사용해 주세요.</span></div>
+      <div class="fr"><label>새 비밀번호 (6자 이상)</label><input type="password" id="fp-new" autocomplete="new-password"></div>
+      <div class="fr"><label>새 비밀번호 확인</label><input type="password" id="fp-new2" autocomplete="new-password"></div>
+      <div class="modal-btns">
+        <button class="btn-c" onclick="closeModal();doLogout()">로그아웃</button>
+        <button class="btn-s" id="fp-btn">변경</button>
+      </div>
+    </div></div>`;
+  document.getElementById('fp-btn').onclick=async()=>{
+    const nw=document.getElementById('fp-new').value, c2=document.getElementById('fp-new2').value;
+    if(nw.length<6){ toast('6자 이상으로 입력하세요'); return; }
+    if(nw!==c2){ toast('비밀번호가 일치하지 않습니다'); return; }
+    if(curUser && nw===initialPw(curUser.id)){ toast('초기 비밀번호와 다르게 입력하세요'); return; }
+    try{ await fbAuth.currentUser.updatePassword(nw); }
+    catch(e){ toast('비밀번호 변경 실패: '+authErrMsg(e)); return; }
+    closeModal(); toast('비밀번호가 변경되었습니다');
+  };
+}
+
 async function addUser(){
   const id=document.getElementById('nu-id').value.trim();
   const pw=document.getElementById('nu-pw').value;
@@ -2923,16 +3056,7 @@ async function addUser(){
   if(pw.length<6){toast('비밀번호는 6자 이상');return;}
   if(PROFILES.find(u=>u.id===id)){toast('이미 존재하는 아이디');return;}
   try{
-    let email=defaultEmail(id), uid;
-    try{ uid=await createAuthAccount(email,pw); }
-    catch(e){
-      if(e.code==='auth/email-already-in-use'){ email=resetEmail(id); uid=await createAuthAccount(email,pw); }
-      else throw e;
-    }
-    const up={};
-    up[`${FB_ROOT}/profiles/${uid}`]={id,name,role,site};
-    up[`${FB_ROOT}/usernames/${idHex(id)}`]={email,uid};
-    await fbDB.ref().update(up);
+    await registerUser(id,name,role,site,pw);
     await loadProfiles(); renderUList();
     ['nu-id','nu-pw','nu-name'].forEach(x=>document.getElementById(x).value='');
     toast(`'${name}' 추가 완료`);
