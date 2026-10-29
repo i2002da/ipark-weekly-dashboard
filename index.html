@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>천안IPC 주간업무현황 v3.7</title>
+<title>천안IPC 주간업무현황 v3.8</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -449,6 +449,128 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .loading{display:flex;align-items:center;justify-content:center;padding:44px;color:var(--tx3);font-size:17px;gap:8px}
 .loading i{font-size:23px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ 반응형 (태블릿·모바일) v3.8 ══ */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden}
+img,table{max-width:100%}
+.modal-bg{position:fixed}
+.modal{max-width:94vw;max-height:92vh;overflow-y:auto}
+.cal-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+.tb-nav{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-width:0}
+.tb-nav::-webkit-scrollbar{display:none}
+@supports(height:100dvh){
+  .dv{height:calc(100dvh - 98px)}
+  .help-wrap{height:calc(100dvh - 98px)}
+}
+@media (hover:none){
+  .gj-tab-edit{opacity:.7}
+  .gj-drag-handle{display:none}
+  .icon-btn,.wn-btn,.cal-nav{min-width:34px;min-height:34px}
+}
+
+/* 태블릿 가로 / 작은 노트북 */
+@media (max-width:1180px){
+  .topbar{padding:0 10px}
+  .tb-brand{padding-right:10px}
+  .tb-brand .co{display:none}
+  .tb-link{padding:0 9px;font-size:15px}
+  .ver-chip{display:none}
+  .wn-lbl{min-width:104px}
+}
+
+/* 태블릿 세로 + 모바일: 페이지 스크롤형 레이아웃 */
+@media (max-width:900px){
+  .topbar{height:auto;grid-template-columns:1fr auto;grid-template-areas:"brand right" "nav nav";padding:6px 10px 0;row-gap:2px;position:static}
+  .tb-brand{grid-area:brand;border-right:none;padding-right:0}
+  .tb-brand .co{display:block;font-size:12px}
+  .tb-nav{grid-area:nav;padding-left:0;margin:0 -10px;padding:0 6px;border-top:1px solid var(--bd)}
+  .tb-right{grid-area:right;padding-left:0;flex-wrap:nowrap}
+  .tb-link{height:44px;font-size:15px;padding:0 11px}
+  .ov-bar,.dv-bar,.cal-hdr{height:auto;min-height:44px;flex-wrap:wrap;padding-top:4px;padding-bottom:4px}
+
+  .dv{height:auto;overflow:visible}
+  #gj-ed-wrap{height:auto!important;overflow:visible!important}
+  .wy-wrap{grid-template-columns:1fr;overflow:visible;flex:none}
+  .wy-pane{overflow:visible}
+  .wy-pane:first-child{border-right:none;border-bottom:6px solid var(--bg3)}
+  .wy-ce{min-height:260px;overflow:visible}
+  .wy-toolbar{position:sticky;top:0;z-index:20}
+
+  .help-wrap{grid-template-columns:1fr;height:auto;overflow:visible}
+  .help-toc{display:flex;overflow-x:auto;padding:0;border-right:none;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:20;scrollbar-width:none}
+  .help-toc::-webkit-scrollbar{display:none}
+  .help-toc-title,.help-toc-sep,.help-toc-item.sub{display:none}
+  .help-toc-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;padding:11px 14px;font-size:14px;flex-shrink:0}
+  .help-toc-item.active{border-left:none;border-bottom-color:var(--blue)}
+  .help-body{overflow:visible;padding:18px 16px 36px}
+  .help-table{display:block;overflow-x:auto;white-space:normal}
+  .help-code{max-width:100%}
+}
+
+/* 모바일 */
+@media (max-width:700px){
+  body{font-size:16px}
+  .login-box{padding:24px 20px}
+  .login-title{font-size:25px}
+  .wn-lbl{min-width:0;padding:2px 7px;font-size:13px}
+  .wn-lbl .wn-date{display:none}
+  .user-chip span{max-width:64px;overflow:hidden;text-overflow:ellipsis}
+  .tb-brand .nm{font-size:15px}
+  .tb-right{gap:4px}
+
+  .ov-compare-hd{display:none}
+  .ov-gj-row{grid-template-columns:1fr}
+  .ov-gj-cell{padding:10px 14px}
+  .ov-gj-cell:first-child{border-right:none;border-bottom:1px dashed var(--bd)}
+  .ov-gj-cell::before{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;margin-bottom:6px}
+  .ov-gj-cell:first-child::before{content:'금주 진행사항';background:var(--blue-bg);color:var(--blue-tx)}
+  .ov-gj-cell:last-child::before{content:'차주 예정사항';background:var(--green-bg);color:var(--green-tx)}
+  .ov-site-name{font-size:18px}
+
+  .gj-tab{font-size:15px;padding:10px 12px}
+  .wy-ce{padding:12px;font-size:16px}
+  .wy-ce h1{font-size:22px}.wy-ce h2{font-size:19px}.wy-ce h3{font-size:17px}
+  .wy-sbar{height:auto;min-height:28px;flex-wrap:wrap;padding:4px 10px}
+  .wt{min-width:34px;height:34px}
+  .wy-pane-hd{flex-wrap:wrap}
+  .wy-ce table{display:block;overflow-x:auto}
+
+  .cal-hdr{gap:6px}
+  .cal-right{margin-left:0;width:100%;justify-content:space-between}
+  .cal-leg{flex-wrap:wrap;gap:6px}
+  .cal-body{padding:10px}
+  .cal-cell{min-height:68px;padding:2px 3px}
+  .cal-dn{font-size:12px}
+  .cal-dow{font-size:11px;padding:4px 0}
+  .cal-ev{font-size:10px;padding:0 3px;line-height:1.35;border-left-width:2px!important}
+  .ev-more{font-size:10px;padding:0 2px}
+  .ev-item{flex-wrap:wrap}
+  .ev-title{flex-basis:60%;font-size:15px}
+
+  .up-box{width:96vw;max-height:90vh}
+  .up-grid{grid-template-columns:1fr}
+  .urow{flex-wrap:wrap}
+  .modal{padding:16px}
+  .modal-btns{position:sticky;bottom:0;background:var(--bg2)}
+  .toast{max-width:92vw;text-align:center;font-size:15px}
+}
+
+/* 아주 작은 폰 */
+@media (max-width:380px){
+  .tb-brand .nm{font-size:14px}
+  .user-chip{display:none}
+  .cal-cell{min-height:58px}
+}
+
+/* 가로 모드 폰(높이 낮음): 상단바 고정 해제 */
+@media (max-height:520px){
+  .topbar{position:static}
+  .help-toc,.wy-toolbar{position:static}
+}
+@media (max-width:900px) and (min-height:700px){
+  .topbar{position:sticky;top:0}
+}
 </style>
 </head>
 <body>
@@ -641,7 +763,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.7  2026-07-21  05:42';
+const VER = 'v3.8  2026-10-29  16:02';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2273,6 +2395,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.8', date:'2026-10-29', tag:'change', items:['핸드폰·태블릿 화면 비율 대응 — 반응형 레이아웃 적용 (화면 폭 1180px / 900px / 700px 기준)', '상단 메뉴를 2단으로 배치하고 단지·주요일정·도움말 메뉴는 좌우 스와이프 가능', '단지별 취합 화면: 모바일에서 금주 진행사항 / 차주 예정사항을 위아래로 구분 표시', '작성 화면: 모바일·태블릿 세로에서 금주/차주 편집창을 위아래로 배치, 화면 높이 고정 해제로 잘림 방지', '주요 일정 달력: 모바일에서 칸 크기·글자 크기 축소, 도움말 목차 가로 스크롤, 팝업·사용자관리 창 화면 폭 맞춤'] },
     { ver:'v3.7', date:'2026-07-21', tag:'change',    items:['로그인 화면 "데모 모드로 보기" 버튼 삭제', '금주 진행사항 초기 입력항목(예정 문구) 삭제, 빈 상태로 시작', '금주 진행사항 입력창 안내문구를 "금주 진행 사항을 입력하세요"로 변경', '공종 탭·취합 화면의 완료/전체 건수 숫자 표시 삭제'] },
     { ver:'v3.6', date:'2026-07-12', tag:'change',    items:['캘린더 날짜 칸에 표시되는 일정 개수 2건 → 4건으로 확대', '5건 이상일 때만 "+N건"으로 표시 (기존 3건 이상에서 완화)', '일정 4개를 담을 수 있도록 날짜 칸 높이 확장', '"+N건" 표시를 파란색·굵은 글씨로 강조해 클릭 유도'] },
     { ver:'v3.5.1', date:'2026-07-02', tag:'fix',    items:['버전 표시 날짜 오류 수정 — 실제 시스템 날짜와 1년 이상 차이나던 문제 해결', '버전 관리 유틸리티가 항상 실제 시스템 날짜를 자동으로 사용하도록 개선 (수동 입력 오류 방지)'] },
