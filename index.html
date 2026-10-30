@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.18</title>
+<title>천안IPC 주간업무현황 v3.19</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -161,6 +161,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 /* 상단 메뉴바를 현황 띠와 같은 남색으로 통합 (v3.16) */
 .topbar{background:#0F1B2D;border-bottom:1px solid #0F1B2D}
 .topbar .tb-nav{border-top-color:#26374F}
+/* v3.19: 넓은 화면에서 메뉴바 내용을 아래 본문(최대 1200px, 좌우 20px)과 같은 폭으로 가운데 정렬 */
+@media (min-width:1181px){
+  .topbar{padding-left:max(16px,calc((100% - 1200px)/2 + 20px));padding-right:max(16px,calc((100% - 1200px)/2 + 20px))}
+}
 .tb-brand{border-right-color:#26374F}
 .tb-brand .co{color:#A8B4C4}
 .tb-brand .nm{color:#fff}
@@ -880,7 +884,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.18  2026-10-30  09:43';
+const VER = 'v3.19  2026-10-30  09:52';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2631,6 +2635,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.19', date:'2026-10-30', tag:'fix', items:['넓은 PC 화면에서 상단 메뉴바 글씨가 양쪽 끝으로 붙던 문제 수정 — 아래 본문(최대 1200px)과 같은 폭으로 가운데 정렬'] },
   { ver:'v3.18', date:'2026-10-30', tag:'change', items:['상단 화면을 2줄로 정리 — ① 메뉴·주차 선택 ② 단지 타일 + [업무 작성]', '주간업무 현황판 제목 삭제, [업무 작성] 버튼을 단지 타일 줄 끝으로 이동(좁은 화면에서는 타일 아래 전체 폭)'] },
   { ver:'v3.17', date:'2026-10-30', tag:'change', items:['상단 메뉴의 단지 탭(3단지~DX TFT)을 없애고 현황판의 단지 타일로 일원화 — 메뉴는 현황판·주요 일정·도움말', '아이패드 화면 확대 배율 2배로 변경', '좁은 화면에서 주차 선택 날짜가 잘리지 않도록 조정'] },
   { ver:'v3.16', date:'2026-10-30', tag:'change', items:['상단 메뉴바와 현황판을 하나의 남색 헤더로 통합 — 중복된 회사명·주차 버튼 정리', '주차 선택(◀ 드롭다운 ▶ 이번 주)을 상단 메뉴바로 옮겨 모든 화면에서 사용', '아이패드에서 양옆 여백 제거(본문 폭 980px 제한 해제), 확대 배율 1.5배 → 1.65배'] },
