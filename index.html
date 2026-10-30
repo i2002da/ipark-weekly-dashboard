@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.17</title>
+<title>천안IPC 주간업무현황 v3.18</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -152,11 +152,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 
 /* ── 현장 관제형 v3.13: 상단 현황 띠 + 대비 카드 + 이번 주 일정 ── */
 .ov-band{background:#0F1B2D;color:#fff}
-.ov-band-in{max-width:1200px;margin:0 auto;padding:18px 20px 20px;display:flex;flex-direction:column;gap:16px}
-.ov-band-hd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
-.ov-band-title{font-size:24px;font-weight:800;line-height:1.3}
-.ov-band-title span{font-size:15px;font-weight:500;color:#A8B4C4;margin-left:8px}
-.ov-write-btn{height:44px;padding:0 18px;border:none;border-radius:10px;background:#F5B83D;color:#0F1B2D;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
+/* v3.18: 제목 줄 없이 [단지 타일 + 업무 작성] 한 줄 — 상단은 메뉴바와 합쳐 2줄 */
+.ov-band-in{max-width:1200px;margin:0 auto;padding:14px 20px 16px;display:flex;flex-wrap:wrap;align-items:stretch;gap:10px}
+.ov-band-in .ov-tiles{flex:999 1 560px;min-width:0}
+.ov-write-btn{flex:1 1 110px;max-width:160px;min-height:44px;padding:8px 14px;border:none;border-radius:14px;background:#F5B83D;color:#0F1B2D;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ov-write-btn i{font-size:20px}
 .ov-write-btn:hover{background:#FFC95C}
 /* 상단 메뉴바를 현황 띠와 같은 남색으로 통합 (v3.16) */
 .topbar{background:#0F1B2D;border-bottom:1px solid #0F1B2D}
@@ -205,8 +205,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .ov-ev-more{font-size:14px;font-weight:700;color:var(--blue);text-decoration:none;padding-top:4px}
 .ov-ev-empty{font-size:14px;color:var(--tx3);padding-top:4px}
 @media (max-width:700px){
-  .ov-band-in{padding:14px 12px 16px;gap:12px}
-  .ov-band-title{font-size:20px}
+  .ov-band-in{padding:12px 12px 14px;gap:8px}
+  .ov-write-btn{max-width:none;flex-direction:row;gap:6px}
   .wn-now{display:none}
   .wn-sel{max-width:200px;font-size:13px;padding:0 24px 0 8px;background-position:right 8px center}
   .topbar .user-chip{display:none}
@@ -734,11 +734,8 @@ img,table{max-width:100%}
   <div class="view active" id="view-overview">
     <section class="ov-band" aria-label="단지별 작성 현황">
       <div class="ov-band-in">
-        <div class="ov-band-hd">
-          <h1 class="ov-band-title">주간업무 현황판<span id="ov-band-wk"></span></h1>
-          <button type="button" class="ov-write-btn" id="ov-write-btn" onclick="openDetail(curOvSite)"><i class="ti ti-edit" aria-hidden="true"></i>업무 작성</button>
-        </div>
         <div class="ov-tiles" id="ov-tiles"></div>
+        <button type="button" class="ov-write-btn" id="ov-write-btn" onclick="openDetail(curOvSite)"><i class="ti ti-edit" aria-hidden="true"></i>업무 작성</button>
       </div>
     </section>
     <div class="ov-main">
@@ -883,7 +880,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.17  2026-10-30  09:07';
+const VER = 'v3.18  2026-10-30  09:43';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2634,6 +2631,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.18', date:'2026-10-30', tag:'change', items:['상단 화면을 2줄로 정리 — ① 메뉴·주차 선택 ② 단지 타일 + [업무 작성]', '주간업무 현황판 제목 삭제, [업무 작성] 버튼을 단지 타일 줄 끝으로 이동(좁은 화면에서는 타일 아래 전체 폭)'] },
   { ver:'v3.17', date:'2026-10-30', tag:'change', items:['상단 메뉴의 단지 탭(3단지~DX TFT)을 없애고 현황판의 단지 타일로 일원화 — 메뉴는 현황판·주요 일정·도움말', '아이패드 화면 확대 배율 2배로 변경', '좁은 화면에서 주차 선택 날짜가 잘리지 않도록 조정'] },
   { ver:'v3.16', date:'2026-10-30', tag:'change', items:['상단 메뉴바와 현황판을 하나의 남색 헤더로 통합 — 중복된 회사명·주차 버튼 정리', '주차 선택(◀ 드롭다운 ▶ 이번 주)을 상단 메뉴바로 옮겨 모든 화면에서 사용', '아이패드에서 양옆 여백 제거(본문 폭 980px 제한 해제), 확대 배율 1.5배 → 1.65배'] },
   { ver:'v3.15', date:'2026-10-30', tag:'change', items:['현황판에 주차 선택 드롭다운 추가 — "44주차 10.26~10.30" 형식으로 지난 52주 ~ 다음 4주 중 선택', '아이패드 화면 확대 배율을 2배에서 1.5배로 조정해 한 화면에 더 넓게 표시(가로 화면은 금주/차주 2열)', '오전 9시 이전에 주차 날짜가 하루 앞당겨 표시되던 문제 수정(예: 10.25~10.29 → 10.26~10.30)'] },
