@@ -7,9 +7,9 @@
 // 아이패드 등 태블릿: viewport 폭을 줄여 화면 전체를 TABLET_SCALE 배 확대해 보이게 한다 (v3.11~)
 // MIN_W 를 704 로 두면 세로 화면에서 금주/차주 2열 대비를 유지(그만큼 덜 확대됨)
 // PC 브라우저는 viewport 메타를 무시하므로 영향 없음, 폰(짧은 변 700 미만)은 제외
-// 1.65배 확대(v3.16) — 아이패드 Air 가로(1180/1.65=715px)는 태블릿 레이아웃(금주/차주 2열), 세로는 핸드폰 레이아웃
+// 2배 확대(v3.17) — 아이패드 Air 가로 590px·세로 410px 로 핸드폰 레이아웃(금주/차주 위아래)으로 표시
 (function(){
-  var TABLET_SCALE=1.65, MIN_W=0;
+  var TABLET_SCALE=2, MIN_W=0;
   var s=Math.min(screen.width,screen.height), l=Math.max(screen.width,screen.height);
   if(!(navigator.maxTouchPoints>1 && s>=700 && s<=1100)) return;
   var m=document.querySelector('meta[name=viewport]');
@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.16</title>
+<title>천안IPC 주간업무현황 v3.17</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -208,8 +208,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
   .ov-band-in{padding:14px 12px 16px;gap:12px}
   .ov-band-title{font-size:20px}
   .wn-now{display:none}
-  .wn-sel{max-width:130px;font-size:13px;padding:0 24px 0 8px;background-position:right 8px center}
+  .wn-sel{max-width:200px;font-size:13px;padding:0 24px 0 8px;background-position:right 8px center}
   .topbar .user-chip{display:none}
+}
+@media (max-width:480px){
+  .tb-brand .co{display:none}
+  .tb-brand .nm{font-size:14px}
+  .wn-sel{max-width:160px}
+}
+@media (max-width:400px){
+  .wn-sel{max-width:118px}
   .ov-tiles{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
   .ov-main{padding:12px;gap:12px}
 }
@@ -699,12 +707,9 @@ img,table{max-width:100%}
       <span class="nm">천안IPC 통합현장</span>
     </div>
     <div class="tb-nav" id="tb-nav">
-      <div class="tb-link site-nav-link active" id="nav-site-3단지" onclick="openSiteOverview('3단지',this)">3단지</div>
-      <div class="tb-link site-nav-link" id="nav-site-4단지" onclick="openSiteOverview('4단지',this)">4단지</div>
-      <div class="tb-link site-nav-link" id="nav-site-5단지" onclick="openSiteOverview('5단지',this)">5단지</div>
-      <div class="tb-link site-nav-link" id="nav-site-6단지" onclick="openSiteOverview('6단지',this)">6단지</div>
-      <div class="tb-link site-nav-link" id="nav-site-기반시설" onclick="openSiteOverview('기반시설',this)">기반시설</div>
-      <div class="tb-link site-nav-link" id="nav-site-DX_TFT" onclick="openSiteOverview('DX TFT',this)">DX TFT</div>
+      <!-- v3.17: 단지 선택은 현황판의 단지 타일로 일원화 (상단 단지 탭 제거) -->
+      <div class="tb-link active" id="nav-home" onclick="openSiteOverview(curOvSite)">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i>현황판</div>
       <div class="tb-link" id="nav-cal" onclick="showView('cal',this)">
         <i class="ti ti-calendar-event" aria-hidden="true"></i>주요 일정</div>
       <div class="tb-link" id="nav-help" onclick="showView('help',this)">
@@ -878,7 +883,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.16  2026-10-30  09:01';
+const VER = 'v3.17  2026-10-30  09:07';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -1423,7 +1428,7 @@ function startApp(){
   document.getElementById('admin-btn').style.display=curUser.role==='admin'?'':'none';
   document.getElementById('footer-ver').textContent=VER;
   updateWeekLabel();
-  openSiteOverview('3단지',document.getElementById('nav-site-3단지'));
+  openSiteOverview('3단지');
 }
 // 앱 초기화 — 저장된 인증 세션이 있으면 복원 (8시간 유효)
 async function initApp(){
@@ -1644,9 +1649,7 @@ let curOvSite = '3단지';
 
 async function openSiteOverview(site,navEl){
   curOvSite=site;
-  showView('overview',null);
-  document.querySelectorAll('.site-nav-link').forEach(l=>l.classList.remove('active'));
-  if(navEl)navEl.classList.add('active');
+  showView('overview',document.getElementById('nav-home'));
   document.getElementById('ov-site-name').textContent=site;
   const body=document.getElementById('ov-body');
   body.innerHTML='<div class="loading"><i class="ti ti-loader"></i>불러오는 중...</div>';
@@ -1676,7 +1679,7 @@ async function renderOvBand(){
   if(wb) wb.style.display=canEdit()?'':'none';
   const el=document.getElementById('ov-tiles'); if(!el) return;
   const list=await Promise.all(SITES.map(async s=>Object.assign({site:s},siteSummary(s,await fetchSiteData(s)))));
-  el.innerHTML=list.map(x=>`<button type="button" class="ov-tile${x.site===curOvSite?' on':''}" onclick="openSiteOverview('${x.site}',document.getElementById('nav-site-${x.site.replace(/ /g,'_')}'))">
+  el.innerHTML=list.map(x=>`<button type="button" class="ov-tile${x.site===curOvSite?' on':''}" onclick="openSiteOverview('${x.site}')">
       <span class="ov-tile-top"><span class="ov-tile-nm">${x.site}</span><span class="ov-tile-st ${x.written?'done':'none'}">${x.written?'작성':'미작성'}</span></span>
       <span class="ov-tile-cnt">금주 ${x.cur}건 · 차주 ${x.nxt}건</span>
     </button>`).join('');
@@ -1691,7 +1694,8 @@ function renderWeekSelect(thisWk){
     opts.push(calcWeek(d));
   }
   if(!opts.some(w=>w.from===WEEK.from)) opts.push(WEEK);
-  sel.innerHTML=opts.map(w=>`<option value="${w.from}"${w.from===WEEK.from?' selected':''}>${wkTxt(w)}${w.from===thisWk.from?' (이번 주)':''}</option>`).join('');
+  const wide=matchMedia('(min-width:701px)').matches;  // 좁은 화면은 "(이번 주)" 생략해 날짜가 잘리지 않게
+  sel.innerHTML=opts.map(w=>`<option value="${w.from}"${w.from===WEEK.from?' selected':''}>${wkTxt(w)}${wide&&w.from===thisWk.from?' (이번 주)':''}</option>`).join('');
 }
 function pickWeek(from){
   WEEK=calcWeek(new Date(from+'T00:00:00'));
@@ -1759,9 +1763,7 @@ function openDetailAt(site,cat){
 }
 
 function backToOverview(){
-  const site=curSite||curOvSite||'3단지';
-  const navId='nav-site-'+site.replace(/ /g,'_');
-  openSiteOverview(site,document.getElementById(navId));
+  openSiteOverview(curSite||curOvSite||'3단지');
 }
 // ════════════════════════════════════════════════════════════
 // 상세 뷰 — contenteditable WYSIWYG
@@ -2632,6 +2634,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.17', date:'2026-10-30', tag:'change', items:['상단 메뉴의 단지 탭(3단지~DX TFT)을 없애고 현황판의 단지 타일로 일원화 — 메뉴는 현황판·주요 일정·도움말', '아이패드 화면 확대 배율 2배로 변경', '좁은 화면에서 주차 선택 날짜가 잘리지 않도록 조정'] },
   { ver:'v3.16', date:'2026-10-30', tag:'change', items:['상단 메뉴바와 현황판을 하나의 남색 헤더로 통합 — 중복된 회사명·주차 버튼 정리', '주차 선택(◀ 드롭다운 ▶ 이번 주)을 상단 메뉴바로 옮겨 모든 화면에서 사용', '아이패드에서 양옆 여백 제거(본문 폭 980px 제한 해제), 확대 배율 1.5배 → 1.65배'] },
   { ver:'v3.15', date:'2026-10-30', tag:'change', items:['현황판에 주차 선택 드롭다운 추가 — "44주차 10.26~10.30" 형식으로 지난 52주 ~ 다음 4주 중 선택', '아이패드 화면 확대 배율을 2배에서 1.5배로 조정해 한 화면에 더 넓게 표시(가로 화면은 금주/차주 2열)', '오전 9시 이전에 주차 날짜가 하루 앞당겨 표시되던 문제 수정(예: 10.25~10.29 → 10.26~10.30)'] },
   { ver:'v3.14', date:'2026-10-30', tag:'new', items:['현황판 상단에 [지난주]·[이번 주]·[다음주] 버튼 추가 — 메인 화면에서 다른 주차의 현황보고를 바로 조회', '이번 주가 아닌 주차를 볼 때 제목 옆에 "n주 전"·"n주 후" 표시'] },
@@ -2710,10 +2713,10 @@ const HELP_SECTIONS = [
       <h3 class="help-h3">상단 네비게이션 바</h3>
       <table class="help-table">
         <tr><th>영역</th><th>설명</th></tr>
-        <tr><td>현장 탭 (3단지 ~ DX TFT)</td><td>클릭 → 해당 현장 취합 화면으로 이동</td></tr>
+        <tr><td>현황판</td><td>단지별 현황 화면으로 이동 — 아래 단지 타일(3단지 ~ DX TFT)을 눌러 현장 선택</td></tr>
         <tr><td>주요 일정</td><td>월별 캘린더 화면으로 이동</td></tr>
         <tr><td>도움말</td><td>이 사용설명서 화면</td></tr>
-        <tr><td>N주차 M.D–M.D <span class="help-kbd">◀</span><span class="help-kbd">▶</span></td><td>현재 주차·날짜 범위 표시 · 클릭하면 이번 주로 이동 · 화살표로 주차 이동</td></tr>
+        <tr><td><span class="help-kbd">◀</span> 주차 선택 <span class="help-kbd">▶</span> 이번 주</td><td>드롭다운에서 "44주차 10.26~10.30" 형식으로 주차 선택 · 화살표로 한 주씩 이동 · [이번 주]로 복귀</td></tr>
         <tr><td>이름 칩</td><td>로그인한 사용자 이름</td></tr>
         <tr><td><span class="help-kbd"><i class="ti ti-users" style="font-size:12px"></i></span></td><td>관리자 전용 — 사용자 관리 패널</td></tr>
         <tr><td><span class="help-kbd"><i class="ti ti-logout" style="font-size:12px"></i></span></td><td>로그아웃</td></tr>

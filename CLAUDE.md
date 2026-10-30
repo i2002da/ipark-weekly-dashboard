@@ -20,8 +20,8 @@ HDC현대산업개발 천안IPC 현장(3단지·4단지·5단지·6단지·기�
 
 ## 주요 코드 위치(검색 키워드)
 `const VER` · `VERSION_HISTORY` · `HELP_SECTIONS` · `showView` · `openSiteOverview` · `renderOverview` · `renderWYEditor` · `getCats/ensureCurrentSnapshot`(공종 변경은 해당 주 이후에만 적용) · `loadCalEventsFromFirebase`(on('value') 하나만, 로컬 변이는 IS_DEMO일 때만) · `doLogin/enterApp/initApp` · `openUP/addUser/resetPassword`
-- 반응형: 파일 끝쪽 `/* ══ 반응형 */` 블록(1180/900/700px). 태블릿은 `<head>` 의 `TABLET_SCALE`(viewport 폭을 줄여 확대, 현재 1.65)로 처리하고 본문 폭 제한 없음(v3.16에서 980px 제한 제거)
-- 메인(단지별 취합) 화면은 현장 관제형(v3.13~): 남색 상단바+현황 띠(`renderOvBand`), 주차 선택 드롭다운은 상단바(`renderWeekSelect`/`pickWeek`)
+- 반응형: 파일 끝쪽 `/* ══ 반응형 */` 블록(1180/900/700px). 태블릿은 `<head>` 의 `TABLET_SCALE`(viewport 폭을 줄여 확대, 현재 2)로 처리하고 본문 폭 제한 없음(v3.16에서 980px 제한 제거)
+- 메인(단지별 취합) 화면은 현장 관제형(v3.13~): 남색 상단바+현황 띠(`renderOvBand`), 주차 선택 드롭다운은 상단바(`renderWeekSelect`/`pickWeek`), 단지 선택은 현황 띠의 타일만(v3.17 상단 단지 탭 제거, 메뉴는 현황판·주요 일정·도움말)
 
 ## 릴리스 절차(모든 변경 공통)
 1. `index.html` 수정
