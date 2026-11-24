@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.19.1</title>
+<title>천안IPC 주간업무현황 v3.19.2</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -684,6 +684,18 @@ img,table{max-width:100%}
 @media (pointer:coarse) and (min-width:701px){
   .ov-band-in,.ov-main{max-width:none;padding-left:14px;padding-right:14px}
 }
+
+/* v3.19.2: 터치 기기 버튼 높이 44px 이상, 짧은 화면에서도 푸터를 맨 아래에 */
+@media (pointer:coarse){
+  .topbar .wn-btn,.topbar .icon-btn,.topbar .wn-sel,.topbar .wn-now{min-height:44px}
+  .tb-link{min-height:44px}
+  .wy-toolbar .wt{min-height:40px;min-width:38px}
+  .wy-copy-btn{min-height:40px}
+}
+#app{min-height:100vh;min-height:100dvh;flex-direction:column}
+#app[style*="block"]{display:flex!important}
+.app-footer{margin-top:auto;flex-shrink:0}
+#app>.view{flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -894,7 +906,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.19.1  2026-11-24  18:49';
+const VER = 'v3.19.2  2026-11-24  18:52';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2647,6 +2659,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.19.2', date:'2026-11-24', tag:'change', items:['터치 화면(폰·아이패드)에서 상단 버튼·서식 버튼 높이를 44px 이상으로 키워 손가락으로 누르기 쉽게 개선','내용이 짧은 화면에서 하단 버전 표시가 중간에 떠 있던 문제 수정 — 항상 화면 맨 아래에 표시'] },
   { ver:'v3.19.1', date:'2026-11-24', tag:'fix', items:['폰 화면에서 상단바 오른쪽(사용자 관리·로그아웃 버튼)이 잘리고 화면이 옆으로 밀리던 문제 수정', '폰 작성 화면 서식 도구막대 끝에 \'/\' 글자가 혼자 떨어져 보이던 문제 수정', '서식 버튼(굵게·제목 등)을 눌러도 편집창의 선택 영역이 풀리지 않도록 보완 (아이패드 대응)'] },
   { ver:'v3.19', date:'2026-10-30', tag:'fix', items:['넓은 PC 화면에서 상단 메뉴바 글씨가 양쪽 끝으로 붙던 문제 수정 — 아래 본문(최대 1200px)과 같은 폭으로 가운데 정렬'] },
   { ver:'v3.18', date:'2026-10-30', tag:'change', items:['상단 화면을 2줄로 정리 — ① 메뉴·주차 선택 ② 단지 타일 + [업무 작성]', '주간업무 현황판 제목 삭제, [업무 작성] 버튼을 단지 타일 줄 끝으로 이동(좁은 화면에서는 타일 아래 전체 폭)'] },
