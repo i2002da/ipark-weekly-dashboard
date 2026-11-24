@@ -21,7 +21,7 @@
   addEventListener('orientationchange',function(){ setTimeout(fit,150); });
 })();
 </script>
-<title>천안IPC 주간업무현황 v3.19</title>
+<title>천안IPC 주간업무현황 v3.19.1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/turndown@7/dist/turndown.js"></script>
@@ -219,6 +219,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
   .tb-brand .co{display:none}
   .tb-brand .nm{font-size:14px}
   .wn-sel{max-width:160px}
+}
+@media (max-width:700px){ .wy-toolbar .wtlbl:last-child{display:none} }
+@media (max-width:480px){
+  /* v3.19.1: 폰 폭에서 상단바(브랜드+주차선택+버튼)가 넘치지 않도록 줄어들게 */
+  .topbar{grid-template-columns:minmax(0,1fr) auto}
+  .tb-brand{min-width:0}
+  .tb-brand .nm{overflow:hidden;text-overflow:ellipsis}
+  .tb-right{gap:3px;min-width:0}
+  .topbar .wn-btn{width:32px;height:34px}
+  .topbar .icon-btn{width:32px;height:34px}
 }
 @media (max-width:400px){
   .wn-sel{max-width:118px}
@@ -884,7 +894,7 @@ img,table{max-width:100%}
 // ════════════════════════════════════════════════════════════
 // 버전 정보
 // ════════════════════════════════════════════════════════════
-const VER = 'v3.19  2026-10-30  09:52';
+const VER = 'v3.19.1  2026-11-24  18:49';
 document.getElementById('login-ver').textContent = '버전 ' + VER;
 
 // ════════════════════════════════════════════════════════════
@@ -2125,6 +2135,8 @@ function placeCaretAtEnd(el){
   sel.addRange(range);
 }
 
+// 서식 버튼을 눌러도 편집창의 선택 영역·커서가 풀리지 않게 함 (아이패드 Safari 대응)
+document.addEventListener('mousedown',e=>{ if(e.target.closest&&e.target.closest('.wy-toolbar .wt')) e.preventDefault(); });
 function focusCE(w){
   const ce=document.getElementById('ce-'+w);
   if(ce&&document.activeElement!==ce)ce.focus();
@@ -2635,6 +2647,7 @@ function openEditEvent(id){
 // 도움말 / 사용설명서 + 버전 이력
 // ════════════════════════════════════════════════════════════
 const VERSION_HISTORY = [
+  { ver:'v3.19.1', date:'2026-11-24', tag:'fix', items:['폰 화면에서 상단바 오른쪽(사용자 관리·로그아웃 버튼)이 잘리고 화면이 옆으로 밀리던 문제 수정', '폰 작성 화면 서식 도구막대 끝에 \'/\' 글자가 혼자 떨어져 보이던 문제 수정', '서식 버튼(굵게·제목 등)을 눌러도 편집창의 선택 영역이 풀리지 않도록 보완 (아이패드 대응)'] },
   { ver:'v3.19', date:'2026-10-30', tag:'fix', items:['넓은 PC 화면에서 상단 메뉴바 글씨가 양쪽 끝으로 붙던 문제 수정 — 아래 본문(최대 1200px)과 같은 폭으로 가운데 정렬'] },
   { ver:'v3.18', date:'2026-10-30', tag:'change', items:['상단 화면을 2줄로 정리 — ① 메뉴·주차 선택 ② 단지 타일 + [업무 작성]', '주간업무 현황판 제목 삭제, [업무 작성] 버튼을 단지 타일 줄 끝으로 이동(좁은 화면에서는 타일 아래 전체 폭)'] },
   { ver:'v3.17', date:'2026-10-30', tag:'change', items:['상단 메뉴의 단지 탭(3단지~DX TFT)을 없애고 현황판의 단지 타일로 일원화 — 메뉴는 현황판·주요 일정·도움말', '아이패드 화면 확대 배율 2배로 변경', '좁은 화면에서 주차 선택 날짜가 잘리지 않도록 조정'] },
